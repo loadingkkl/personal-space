@@ -1,0 +1,69 @@
+{% extends "admin/index.html" %}
+{% load i18n %}
+
+{% block content %}
+<div class="admin-welcome">
+    <h1>👋 欢迎回来，{{ user.get_short_name|default:user.username }}</h1>
+    <p>{{ today }} · 这里是星语博客的管理中心</p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card stat-card--indigo">
+        <div class="stat-card__icon">📝</div>
+        <div class="stat-card__info">
+            <div class="stat-card__label">文章总数</div>
+            <div class="stat-card__value">{{ stats.post_count }}</div>
+            <div class="stat-card__sub">已发布 {{ stats.published_count }}</div>
+        </div>
+    </div>
+    <div class="stat-card stat-card--emerald">
+        <div class="stat-card__icon">💬</div>
+        <div class="stat-card__info">
+            <div class="stat-card__label">评论总数</div>
+            <div class="stat-card__value">{{ stats.comment_count }}</div>
+            <div class="stat-card__sub">来自读者的声音</div>
+        </div>
+    </div>
+    <div class="stat-card stat-card--violet">
+        <div class="stat-card__icon">🎬</div>
+        <div class="stat-card__info">
+            <div class="stat-card__label">书影音</div>
+            <div class="stat-card__value">{{ stats.media_count }}</div>
+            <div class="stat-card__sub">已完成 {{ stats.media_done_count }}</div>
+        </div>
+    </div>
+    <div class="stat-card stat-card--amber">
+        <div class="stat-card__icon">👁️</div>
+        <div class="stat-card__info">
+            <div class="stat-card__label">总阅读量</div>
+            <div class="stat-card__value">{{ stats.total_views }}</div>
+            <div class="stat-card__sub">累计浏览</div>
+        </div>
+    </div>
+    <div class="stat-card stat-card--sky">
+        <div class="stat-card__icon">🏷️</div>
+        <div class="stat-card__info">
+            <div class="stat-card__label">分类 / 标签</div>
+            <div class="stat-card__value">{{ stats.category_count }} / {{ stats.tag_count }}</div>
+            <div class="stat-card__sub">内容组织</div>
+        </div>
+    </div>
+    <div class="stat-card stat-card--rose">
+        <div class="stat-card__icon">🔗</div>
+        <div class="stat-card__info">
+            <div class="stat-card__label">友情链接</div>
+            <div class="stat-card__value">{{ stats.link_count }}</div>
+            <div class="stat-card__sub">互联互通</div>
+        </div>
+    </div>
+</div>
+
+<div class="quick-actions">
+    <a href="{% url 'admin:blog_post_add' %}" class="quick-action-btn quick-action-btn--primary">✏️ 写新文章</a>
+    <a href="{% url 'admin:blog_media_add' %}" class="quick-action-btn">🎬 添加书影音</a>
+    <a href="{% url 'admin:blog_friendlink_add' %}" class="quick-action-btn">🔗 添加友链</a>
+    <a href="/" class="quick-action-btn" target="_blank">🌐 查看网站</a>
+</div>
+
+{{ block.super }}
+{% endblock %}

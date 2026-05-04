@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}友链 - 我的博客{% endblock %}
+{% block layout_class %}layout-full{% endblock %}
+
+{% block content %}
+<div class="links-page">
+    <!-- Hero -->
+    <div class="page-hero">
+        <h1 class="page-hero-title">海内存知己</h1>
+        <p class="page-hero-subtitle">天涯若比邻 · Friends & Connections</p>
+    </div>
+
+    <!-- My site info card -->
+    <div class="site-info-card">
+        <div class="site-info-left">
+            <div class="profile-avatar" style="width:56px;height:56px;margin:0;flex-shrink:0">
+                <img src="{% static 'avatar.png' %}" alt="星语">
+            </div>
+            <div>
+                <h3 class="site-info-name">星语的博客</h3>
+                <p class="site-info-desc">在星辰的指引下，用言语编织梦想</p>
+            </div>
+        </div>
+        <div class="site-info-fields">
+            <div class="site-info-field">
+                <span class="field-label">站点名称</span>
+                <code>星语的博客</code>
+            </div>
+            <div class="site-info-field">
+                <span class="field-label">站点描述</span>
+                <code>在星辰的指引下，用言语编织梦想</code>
+            </div>
+            <div class="site-info-field">
+                <span class="field-label">站点链接</span>
+                <code>https://example.com</code>
+            </div>
+        </div>
+    </div>
+
+    <!-- Requirements -->
+    <div class="links-requirements">
+        <h3>友链申请要求</h3>
+        <p class="req-intro">申请前请先添加本站，并确保符合以下条件</p>
+        <div class="req-grid">
+            <div class="req-item">
+                <span class="req-icon">&#9998;</span>
+                <span>网站内容原创，排版整洁</span>
+            </div>
+            <div class="req-item">
+                <span class="req-icon">&#128196;</span>
+                <span>坚持更新，至少有 5 篇文章</span>
+            </div>
+            <div class="req-item">
+                <span class="req-icon">&#128274;</span>
+                <span>使用 HTTPS 协议</span>
+            </div>
+            <div class="req-item">
+                <span class="req-icon">&#127760;</span>
+                <span>网站可正常访问</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Friend links -->
+    <div class="links-section">
+        <h2 class="links-section-title">
+            友情链接
+            <span class="links-count">({{ link_count }})</span>
+        </h2>
+        <div class="links-grid">
+            {% for link in links %}
+            <a href="{{ link.url }}" class="link-card" target="_blank" rel="noopener">
+                <div class="link-card-avatar">
+                    {% if link.avatar %}
+                    <img src="{{ link.avatar }}" alt="{{ link.name }}" loading="lazy"
+                         onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                    <span class="link-card-initial" style="display:none">{{ link.initial }}</span>
+                    {% else %}
+                    <span class="link-card-initial">{{ link.initial }}</span>
+                    {% endif %}
+                </div>
+                <div class="link-card-body">
+                    <h3 class="link-card-name">{{ link.name }}</h3>
+                    <p class="link-card-url">{{ link.url|cut:"https://"|cut:"http://"|truncatechars:30 }}</p>
+                    {% if link.description %}
+                    <p class="link-card-desc">{{ link.description }}</p>
+                    {% endif %}
+                </div>
+            </a>
+            {% empty %}
+            <div class="empty-state" style="grid-column:1/-1">
+                <div class="empty-icon">&#129309;</div>
+                <h2>等待你的加入</h2>
+                <p>暂时还没有友链，欢迎申请！</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block sidebar %}{% endblock %}

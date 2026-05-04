@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}关于 - 我的博客{% endblock %}
+{% block layout_class %}layout-full{% endblock %}
+
+{% block content %}
+<div class="about-page">
+    <!-- Hero -->
+    <div class="about-hero">
+        <div class="profile-avatar" style="width:96px;height:96px;box-shadow:0 8px 24px rgba(35,183,229,.25)">
+            <img src="{% static 'avatar.png' %}" alt="星语">
+        </div>
+        <h1 class="about-name">星语</h1>
+        <p class="about-location">中国 · 互联网的某个角落</p>
+        <p class="about-motto">想拥有一个自己说了算的地方，所以有了这里。</p>
+    </div>
+
+    <!-- Intro -->
+    <div class="about-section about-card">
+        <p>说是博客，其实更像是一本公开的笔记。记录技术的探索、生活的感悟、看过的书和电影。</p>
+        <p>「星语」取自对星空的热爱——每颗星都有自己的故事，写博客也是如此，把想法变成文字，留下属于自己的光。</p>
+        <p>来者都是客，祝好！</p>
+    </div>
+
+    <!-- Timeline -->
+    <div class="about-section">
+        <h2 class="about-section-title">折腾过的东西</h2>
+        <p class="about-section-subtitle">建站工具的迁移史</p>
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-dot active"></div>
+                <div class="timeline-content">
+                    <h3>Django</h3>
+                    <p>Python 全栈，自己写前后端，终于找到了感觉。</p>
+                    <span class="timeline-badge using">在用</span>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <h3>Hexo</h3>
+                    <p>静态生成，快但配置烦，每次更新都要本地构建。</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot"></div>
+                <div class="timeline-content">
+                    <h3>WordPress</h3>
+                    <p>最开始的尝试，啥都不懂的时候。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Doing -->
+    <div class="about-section">
+        <h2 class="about-section-title">正在做的事</h2>
+        <p class="about-section-subtitle">想法比时间多</p>
+        <div class="doing-grid">
+            <div class="doing-card">
+                <div class="doing-card-header">
+                    <span class="doing-icon">&#127760;</span>
+                    <span class="doing-status ongoing">进行中</span>
+                </div>
+                <h3>这个网站</h3>
+                <p>持续在改，永远没有完工的那天</p>
+            </div>
+            <div class="doing-card">
+                <div class="doing-card-header">
+                    <span class="doing-icon">&#9998;</span>
+                    <span class="doing-status ongoing">进行中</span>
+                </div>
+                <h3>认真写文章</h3>
+                <p>折腾够了，该写点什么了</p>
+            </div>
+            <div class="doing-card">
+                <div class="doing-card-header">
+                    <span class="doing-icon">&#128218;</span>
+                    <span class="doing-status paused">想法阶段</span>
+                </div>
+                <h3>做个小工具</h3>
+                <p>具体做什么还没想好</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Likes -->
+    <div class="about-section">
+        <h2 class="about-section-title">喜欢的东西</h2>
+        <p class="about-section-subtitle">比较私人，但也没什么不能说的</p>
+        <div class="likes-grid">
+            <div class="likes-card">
+                <h3>&#127926; 音乐</h3>
+                <div class="likes-tags">
+                    <span>陈奕迅</span><span>周杰伦</span><span>Radiohead</span><span>后摇</span>
+                </div>
+            </div>
+            <div class="likes-card">
+                <h3>&#128218; 读过的书</h3>
+                <div class="likes-tags">
+                    <span>三体</span><span>百年孤独</span><span>小王子</span><span>活着</span>
+                </div>
+            </div>
+            <div class="likes-card">
+                <h3>&#127918; 玩过的游戏</h3>
+                <div class="likes-tags">
+                    <span>塞尔达</span><span>艾尔登法环</span><span>空洞骑士</span><span>黑神话</span>
+                </div>
+            </div>
+            <div class="likes-card">
+                <h3>&#127758; 想去的地方</h3>
+                <div class="likes-tags">
+                    <span>云南·大理</span><span>安徽·黄山</span><span>浙江·杭州</span><span>日本·京都</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block sidebar %}{% endblock %}

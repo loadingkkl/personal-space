@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% load static blog_extras %}
+
+{% block title %}书影 - 我的博客{% endblock %}
+{% block layout_class %}layout-full{% endblock %}
+
+{% block content %}
+<div class="media-page">
+    <div class="media-hero">
+        <h1 class="media-hero-title">书影游记</h1>
+        <p class="media-hero-desc">记录看过的影视、读过的书、玩过的游戏，共 <strong>{{ total_count }}</strong> 条记录</p>
+    </div>
+
+    <div class="media-tabs">
+        <a href="{% url 'blog:media' %}"
+           class="media-tab{% if not current_type %} active{% endif %}">
+            <span class="tab-icon">&#127912;</span>
+            <span class="tab-text">全部</span>
+            <span class="tab-count">{{ total_count }}</span>
+        </a>
+        {% for key, label in media_types %}
+        <a href="{% url 'blog:media' %}?type={{ key }}"
+           class="media-tab{% if current_type == key %} active{% endif %}">
+            <span class="tab-icon">{{ media_type_icons|dictget:key }}</span>
+            <span class="tab-text">{{ label }}</span>
+            <span class="tab-count">{{ type_counts|dictget:key }}</span>
+        </a>
+        {% endfor %}
+    </div>
+
+    <div class="media-grid">
+        {% for item in media_list %}
+        <a href="{{ item.douban_url|default:'#' }}" class="media-card" {% if item.douban_url %}target="_blank" rel="noopener"{% endif %}>
+            <div class="media-card-cover">
+                {% if item.cover %}
+                <img src="{{ item.cover.url }}" alt="{{ item.title }}" loading="lazy">
+                {% else %}
+                <div class="media-card-placeholder">
+                    {% if item.media_type == 'movie' %}&#127916;{% elif item.media_type == 'book' %}&#128218;{% else %}&#127918;{% endif %}
+                </div>
+                {% endif %}
+                <div class="media-card-hover">
+                    {% if item.summary %}
+                    <p class="media-card-summary">{{ item.summary|truncatechars:80 }}</p>
+                    {% endif %}
+                    <div class="media-card-stars">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= item.full_stars %}
+                            <span class="star full">&#9733;</span>
+                            {% elif forloop.counter == item.full_stars|add:1 and item.half_star %}
+                            <span class="star half">&#9733;</span>
+                            {% else %}
+                            <span class="star empty">&#9733;</span>
+                            {% endif %}
+                        {% endfor %}
+                        <span class="rating-num">{{ item.rating|floatformat:0 }}</span>
+                    </div>
+                    {% if item.douban_url %}
+                    <span class="media-douban-hint">查看豆瓣页面 &rarr;</span>
+                    {% endif %}
+                </div>
+                <span class="media-type-badge">
+                    {% if item.media_type == 'movie' %}&#127916;{% elif item.media_type == 'book' %}&#128218;{% else %}&#127918;{% endif %}
+                </span>
+                {% if item.status == 'doing' %}
+                <span class="media-status-badge doing">在{{ item.media_type|cut:'movie'|cut:'book'|cut:'game' }}{% if item.media_type == 'book' %}读{% elif item.media_type == 'game' %}玩{% else %}看{% endif %}</span>
+                {% elif item.status == 'wish' %}
+                <span class="media-status-badge wish">想{{ item.media_type|cut:'movie'|cut:'book'|cut:'game' }}{% if item.media_type == 'book' %}读{% elif item.media_type == 'game' %}玩{% else %}看{% endif %}</span>
+                {% endif %}
+            </div>
+            <div class="media-card-info">
+                <h3 class="media-card-title" title="{{ item.title }}">{{ item.title }}</h3>
+                {% if item.creator %}
+                <p class="media-card-creator">{{ item.creator }}</p>
+                {% endif %}
+                <div class="media-card-rating-inline">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= item.full_stars %}
+                        <span class="star-sm full">&#9733;</span>
+                        {% elif forloop.counter == item.full_stars|add:1 and item.half_star %}
+                        <span class="star-sm half">&#9733;</span>
+                        {% else %}
+                        <span class="star-sm empty">&#9733;</span>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                {% if item.finished_date %}
+                <p class="media-card-date">{{ item.finished_date|date:"Y.m.d" }}</p>
+                {% endif %}
+            </div>
+        </a>
+        {% empty %}
+        <div class="empty-state" style="grid-column:1/-1">
+            <div class="empty-icon">&#127917;</div>
+            <h2>暂无记录</h2>
+            <p>还没有添加任何记录</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+    <nav class="pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}" class="page-btn">&laquo; 上一页</a>
+        {% endif %}
+        {% for num in paginator.page_range %}
+            {% if page_obj.number == num %}
+            <span class="page-btn active">{{ num }}</span>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <a href="?page={{ num }}{% if current_type %}&type={{ current_type }}{% endif %}" class="page-btn">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if current_type %}&type={{ current_type }}{% endif %}" class="page-btn">下一页 &raquo;</a>
+        {% endif %}
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block sidebar %}{% endblock %}

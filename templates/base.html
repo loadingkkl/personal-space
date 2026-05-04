@@ -1,0 +1,151 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}我的博客{% endblock %}</title>
+    <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="{% url 'blog:index' %}" class="nav-brand">星语</a>
+            <div class="nav-links" id="navLinks">
+                <a href="{% url 'blog:index' %}" class="nav-link">首页</a>
+                <a href="{% url 'blog:articles' %}" class="nav-link">文章</a>
+                <a href="{% url 'blog:media' %}" class="nav-link">书影</a>
+                <a href="{% url 'blog:links' %}" class="nav-link">友链</a>
+                <a href="{% url 'blog:about' %}" class="nav-link">关于</a>
+            </div>
+            <div class="nav-right">
+                <form class="search-form" action="{% url 'blog:search' %}" method="get">
+                    <input type="text" name="q" placeholder="搜索..." value="{{ q|default:'' }}" class="search-input">
+                    <button type="submit" class="search-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </button>
+                </form>
+                <button class="nav-toggle" id="navToggle" aria-label="菜单">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    {% if messages %}
+    <div class="container">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <main class="main-content">
+        <div class="container layout {% block layout_class %}{% endblock %}">
+            <div class="content-area">
+                {% block content %}{% endblock %}
+            </div>
+            <aside class="sidebar">
+                {% block sidebar %}
+                <div class="sidebar-card profile-card">
+                    <div class="profile-banner"></div>
+                    <div class="profile-main">
+                        <div class="profile-avatar">
+                            <img src="{% static 'avatar.png' %}" alt="星语">
+                        </div>
+                        <h3 class="profile-name">星语</h3>
+                        <p class="profile-motto">在星辰的指引下，用言语编织梦想</p>
+                        <div class="profile-social">
+                            <a href="{% url 'blog:about' %}" class="profile-social-btn" title="关于我">关于我</a>
+                            <a href="{% url 'blog:links' %}" class="profile-social-btn" title="友链">友链</a>
+                        </div>
+                    </div>
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <span class="stat-num">{{ stats.post_count }}</span>
+                            <span class="stat-label">文章</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-num">{{ stats.category_count }}</span>
+                            <span class="stat-label">分类</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-num">{{ stats.comment_count }}</span>
+                            <span class="stat-label">评论</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-num">{{ stats.tag_count }}</span>
+                            <span class="stat-label">标签</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">最新文章</h3>
+                    <ul class="sidebar-list">
+                        {% for post in recent_posts %}
+                        <li><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></li>
+                        {% empty %}
+                        <li class="empty-hint">暂无文章</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">分类</h3>
+                    <div class="tag-cloud">
+                        {% for cat in categories %}
+                        <a href="{% url 'blog:category' cat.pk %}" class="tag-item category-tag">
+                            {{ cat.name }} <span class="count">{{ cat.num_posts }}</span>
+                        </a>
+                        {% empty %}
+                        <span class="empty-hint">暂无分类</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">标签</h3>
+                    <div class="tag-cloud">
+                        {% for tag in tags %}
+                        <a href="{% url 'blog:tag' tag.pk %}" class="tag-item">
+                            {{ tag.name }}
+                        </a>
+                        {% empty %}
+                        <span class="empty-hint">暂无标签</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="sidebar-card">
+                    <h3 class="sidebar-title">归档</h3>
+                    <ul class="sidebar-list">
+                        {% for date in archive_dates %}
+                        <li>
+                            <a href="{% url 'blog:archive' date.year date.month %}">
+                                {{ date.year }}年{{ date.month }}月
+                            </a>
+                        </li>
+                        {% empty %}
+                        <li class="empty-hint">暂无归档</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endblock %}
+            </aside>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container footer-inner">
+            <p>&copy; 2026 星语的博客 &middot; 用 Django 构建</p>
+        </div>
+    </footer>
+    <script src="{% static 'js/carousel.js' %}"></script>
+    <script>
+    document.getElementById('navToggle').addEventListener('click', function() {
+        document.getElementById('navLinks').classList.toggle('open');
+        this.classList.toggle('active');
+    });
+    </script>
+</body>
+</html>

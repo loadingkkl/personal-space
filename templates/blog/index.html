@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title|default:"首页" }} - 我的博客{% endblock %}
+
+{% block content %}
+{% if featured_posts and not page_title %}
+<div class="carousel" id="carousel">
+    <div class="carousel-track" id="carouselTrack">
+        {% for post in featured_posts %}
+        <div class="carousel-slide{% if forloop.first %} active{% endif %}">
+            <img src="{{ post.cover.url }}" alt="{{ post.title }}" class="carousel-img">
+            <div class="carousel-overlay"></div>
+            <div class="carousel-content">
+                <a href="{% url 'blog:category' post.category.pk %}" class="carousel-category">{{ post.category }}</a>
+                <h2 class="carousel-title">
+                    <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+                </h2>
+                <p class="carousel-excerpt">{{ post.excerpt|truncatechars:80 }}</p>
+                <div class="carousel-meta">
+                    <span>{{ post.author }}</span>
+                    <span>{{ post.created_time|date:"Y/m/d" }}</span>
+                    <span>&#128065; {{ post.views }}</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <button class="carousel-arrow carousel-prev" onclick="carouselPrev()">&#10094;</button>
+    <button class="carousel-arrow carousel-next" onclick="carouselNext()">&#10095;</button>
+    <div class="carousel-dots" id="carouselDots">
+        {% for post in featured_posts %}
+        <button class="carousel-dot{% if forloop.first %} active{% endif %}" onclick="carouselGo({{ forloop.counter0 }})"></button>
+        {% endfor %}
+    </div>
+    <div class="carousel-progress">
+        <div class="carousel-progress-bar" id="carouselProgress"></div>
+    </div>
+</div>
+{% endif %}
+
+{% if page_title %}
+<div class="page-header">
+    <h1>{{ page_title }}</h1>
+</div>
+{% endif %}
+
+<div class="post-grid">
+    {% for post in post_list %}
+    <article class="post-card">
+        {% if post.cover %}
+        <a href="{{ post.get_absolute_url }}" class="post-card-cover">
+            <img src="{{ post.cover.url }}" alt="{{ post.title }}">
+        </a>
+        {% endif %}
+        <div class="post-card-body">
+            <div class="post-meta">
+                <a href="{% url 'blog:category' post.category.pk %}" class="post-category">{{ post.category }}</a>
+                <span class="post-date">{{ post.created_time|date:"Y年m月d日" }}</span>
+            </div>
+            <h2 class="post-card-title">
+                <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+            </h2>
+            <p class="post-excerpt">{{ post.excerpt|default:post.body|truncatechars:120 }}</p>
+            <div class="post-card-footer">
+                <span class="post-author">{{ post.author }}</span>
+                <span class="post-views">&#128065; {{ post.views }}</span>
+            </div>
+        </div>
+    </article>
+    {% empty %}
+    <div class="empty-state">
+        <div class="empty-icon">&#128221;</div>
+        <h2>暂无文章</h2>
+        <p>还没有发布任何文章，请在管理后台添加。</p>
+    </div>
+    {% endfor %}
+</div>
+
+{% if is_paginated %}
+<nav class="pagination">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}" class="page-btn">&laquo; 上一页</a>
+    {% endif %}
+
+    {% for num in paginator.page_range %}
+        {% if page_obj.number == num %}
+        <span class="page-btn active">{{ num }}</span>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <a href="?page={{ num }}" class="page-btn">{{ num }}</a>
+        {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}" class="page-btn">下一页 &raquo;</a>
+    {% endif %}
+</nav>
+{% endif %}
+{% endblock %}
