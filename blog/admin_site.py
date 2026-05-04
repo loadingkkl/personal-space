@@ -3,6 +3,8 @@ import os
 from django.conf import settings
 from django.contrib.admin import AdminSite
 from django.db.models import Sum
+from django.template.response import TemplateResponse
+from django.urls import path
 from django.utils import timezone
 
 
@@ -22,6 +24,23 @@ class BlogAdminSite(AdminSite):
             'admin_debug_enabled': settings.DEBUG,
         })
         return context
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('health/', self.admin_view(self.health_view), name='health'),
+        ]
+        return custom_urls + urls
+
+    def health_view(self, request):
+        from .ops import get_deployment_health
+
+        context = {
+            **self.each_context(request),
+            'title': '线上运维健康检查',
+            'health': get_deployment_health(),
+        }
+        return TemplateResponse(request, 'admin/health.html', context)
 
     def index(self, request, extra_context=None):
         from .models import Post, Comment, Media, Category, Tag, FriendLink

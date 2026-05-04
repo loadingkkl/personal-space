@@ -1,0 +1,53 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    &rsaquo; 线上运维健康检查
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="health-hero health-hero--{{ health.overall }}">
+    <div>
+        <span class="health-hero__eyebrow">Deployment Health</span>
+        <h1>线上运维健康检查</h1>
+        <p>{{ health.environment }} · {{ health.database }}</p>
+    </div>
+    <div class="health-score">
+        <strong>{{ health.counts.ok }}</strong>
+        <span>项正常</span>
+    </div>
+</div>
+
+<div class="health-summary">
+    <div class="health-summary__item health-summary__item--ok">
+        <strong>{{ health.counts.ok }}</strong>
+        <span>正常</span>
+    </div>
+    <div class="health-summary__item health-summary__item--warning">
+        <strong>{{ health.counts.warning }}</strong>
+        <span>提醒</span>
+    </div>
+    <div class="health-summary__item health-summary__item--error">
+        <strong>{{ health.counts.error }}</strong>
+        <span>异常</span>
+    </div>
+</div>
+
+<div class="health-list">
+    {% for item in health.checks %}
+    <section class="health-check health-check--{{ item.status }}">
+        <div class="health-check__status"></div>
+        <div class="health-check__body">
+            <div class="health-check__top">
+                <h2>{{ item.name }}</h2>
+                <span>{{ item.label }}</span>
+            </div>
+            <p>{{ item.detail }}</p>
+        </div>
+    </section>
+    {% endfor %}
+</div>
+{% endblock %}
