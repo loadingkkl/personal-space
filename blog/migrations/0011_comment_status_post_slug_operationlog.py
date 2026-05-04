@@ -43,7 +43,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='post',
             name='slug',
-            field=models.SlugField(allow_unicode=True, blank=True, max_length=120, verbose_name='Slug'),
+            field=models.SlugField(allow_unicode=True, blank=True, db_index=False, max_length=120, verbose_name='Slug'),
         ),
         migrations.RunPython(populate_slug_and_approve_comments, migrations.RunPython.noop),
         migrations.AlterField(
