@@ -7,7 +7,7 @@
 <div id="site-name">
     <a href="{% url 'admin:index' %}">
         <img src="{% static 'avatar.png' %}" alt="星语" class="admin-logo">
-        星语博客
+        <span class="admin-brand-title">星语博客</span>
         <span class="admin-brand-badge">管理</span>
         <span class="admin-env-badge admin-env-badge--{{ admin_environment_class }}" title="{{ admin_database_label }}{% if admin_debug_enabled %} · DEBUG{% endif %}">
             {{ admin_environment }}
@@ -17,22 +17,19 @@
 {% endblock %}
 
 {% block userlinks %}
+<div class="admin-user-menu">
+    <span class="admin-user-chip">{{ user.get_short_name|default:user.username }}</span>
     {% if site_url %}
-        <a href="{{ site_url }}">{% translate 'View site' %}</a> /
-    {% endif %}
-    {% if user.is_active and user.is_staff %}
-        {% url 'django-admindocs-docroot' as docsroot %}
-        {% if docsroot %}
-            <a href="{{ docsroot }}">{% translate 'Documentation' %}</a> /
-        {% endif %}
+        <a href="{{ site_url }}">查看站点</a>
     {% endif %}
     {% if user.has_usable_password %}
-        <a href="{% url 'admin:password_change' %}">{% translate 'Change password' %}</a> /
+        <a href="{% url 'admin:password_change' %}">修改密码</a>
     {% endif %}
     <form id="logout-form" method="post" action="{% url 'admin:logout' %}">
         {% csrf_token %}
-        <button type="submit">{% translate 'Log out' %}</button>
+        <button type="submit">退出</button>
     </form>
+</div>
 {% endblock %}
 
 {% block extrastyle %}

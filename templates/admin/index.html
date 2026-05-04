@@ -3,13 +3,13 @@
 
 {% block content %}
 <div class="admin-welcome">
-    <h1>👋 欢迎回来，{{ user.get_short_name|default:user.username }}</h1>
+    <h1>欢迎回来，{{ user.get_short_name|default:user.username }}</h1>
     <p>{{ today }} · 这里是星语博客的管理中心</p>
 </div>
 
 <div class="environment-panel environment-panel--{{ admin_environment_class }}">
     <div>
-        <span class="environment-panel__eyebrow">当前操作环境</span>
+        <span class="environment-panel__eyebrow">当前运行环境</span>
         <strong>{{ admin_environment }}</strong>
     </div>
     <div>
@@ -24,7 +24,7 @@
 
 <div class="stats-grid">
     <div class="stat-card stat-card--indigo">
-        <div class="stat-card__icon">📝</div>
+        <div class="stat-card__icon">文</div>
         <div class="stat-card__info">
             <div class="stat-card__label">文章总数</div>
             <div class="stat-card__value">{{ stats.post_count }}</div>
@@ -32,7 +32,7 @@
         </div>
     </div>
     <div class="stat-card stat-card--emerald">
-        <div class="stat-card__icon">💬</div>
+        <div class="stat-card__icon">评</div>
         <div class="stat-card__info">
             <div class="stat-card__label">评论总数</div>
             <div class="stat-card__value">{{ stats.comment_count }}</div>
@@ -40,15 +40,15 @@
         </div>
     </div>
     <div class="stat-card stat-card--violet">
-        <div class="stat-card__icon">🎬</div>
+        <div class="stat-card__icon">影</div>
         <div class="stat-card__info">
-            <div class="stat-card__label">书影音</div>
+            <div class="stat-card__label">书影影音</div>
             <div class="stat-card__value">{{ stats.media_count }}</div>
             <div class="stat-card__sub">已完成 {{ stats.media_done_count }}</div>
         </div>
     </div>
     <div class="stat-card stat-card--amber">
-        <div class="stat-card__icon">👁️</div>
+        <div class="stat-card__icon">阅</div>
         <div class="stat-card__info">
             <div class="stat-card__label">总阅读量</div>
             <div class="stat-card__value">{{ stats.total_views }}</div>
@@ -56,7 +56,7 @@
         </div>
     </div>
     <div class="stat-card stat-card--sky">
-        <div class="stat-card__icon">🏷️</div>
+        <div class="stat-card__icon">类</div>
         <div class="stat-card__info">
             <div class="stat-card__label">分类 / 标签</div>
             <div class="stat-card__value">{{ stats.category_count }} / {{ stats.tag_count }}</div>
@@ -64,7 +64,7 @@
         </div>
     </div>
     <div class="stat-card stat-card--rose">
-        <div class="stat-card__icon">🔗</div>
+        <div class="stat-card__icon">链</div>
         <div class="stat-card__info">
             <div class="stat-card__label">友情链接</div>
             <div class="stat-card__value">{{ stats.link_count }}</div>
@@ -74,12 +74,12 @@
 </div>
 
 <div class="quick-actions">
-    <a href="{% url 'admin:blog_post_add' %}" class="quick-action-btn quick-action-btn--primary">✏️ 写新文章</a>
-    <a href="{% url 'admin:blog_media_add' %}" class="quick-action-btn">🎬 添加书影音</a>
-    <a href="{% url 'admin:blog_friendlink_add' %}" class="quick-action-btn">🔗 添加友链</a>
-    <a href="{% url 'admin:health' %}" class="quick-action-btn">🩺 运维检查</a>
-    <a href="{% url 'admin:backup' %}" class="quick-action-btn">💾 备份恢复</a>
-    <a href="/" class="quick-action-btn" target="_blank">🌐 查看网站</a>
+    <a href="{% url 'admin:blog_post_add' %}" class="quick-action-btn quick-action-btn--primary">写新文章</a>
+    <a href="{% url 'admin:blog_media_add' %}" class="quick-action-btn">添加书影音</a>
+    <a href="{% url 'admin:blog_friendlink_add' %}" class="quick-action-btn">添加友链</a>
+    <a href="{% url 'admin:health' %}" class="quick-action-btn">运维检查</a>
+    <a href="{% url 'admin:backup' %}" class="quick-action-btn">备份恢复</a>
+    <a href="/" class="quick-action-btn" target="_blank">查看网站</a>
 </div>
 
 {{ block.super }}
