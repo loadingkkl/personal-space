@@ -78,11 +78,30 @@ class PostAdmin(admin.ModelAdmin):
 
 @admin.register(Media, site=blog_admin_site)
 class MediaAdmin(admin.ModelAdmin):
-    list_display = ('title', 'type_display', 'rating_display', 'status_display', 'creator', 'finished_date')
+    list_display = ('cover_preview', 'title', 'type_display', 'rating_display', 'status_display', 'creator', 'finished_date')
     list_filter = ('media_type', 'status', 'rating')
     search_fields = ('title', 'creator', 'summary')
     list_editable = ('finished_date',)
     list_per_page = 20
+    readonly_fields = ('cover_preview',)
+    fieldsets = (
+        ('基本信息', {
+            'fields': ('title', 'media_type', 'cover', 'cover_preview', 'rating', 'status')
+        }),
+        ('详情', {
+            'fields': ('creator', 'summary', 'finished_date', 'douban_url')
+        }),
+    )
+
+    def cover_preview(self, obj):
+        if obj and obj.cover:
+            return format_html(
+                '<img src="{}" alt="{}" style="width:48px;height:72px;object-fit:cover;border-radius:6px;">',
+                obj.cover.url,
+                obj.title,
+            )
+        return format_html('<span class="admin-preview">暂无封面</span>')
+    cover_preview.short_description = '封面'
 
     def type_display(self, obj):
         icons = {'movie': '🎬', 'book': '📖', 'game': '🎮'}
