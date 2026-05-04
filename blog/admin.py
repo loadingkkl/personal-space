@@ -147,10 +147,26 @@ class MediaAdmin(admin.ModelAdmin):
 
 @admin.register(FriendLink, site=blog_admin_site)
 class FriendLinkAdmin(admin.ModelAdmin):
-    list_display = ('name', 'url_display', 'description', 'sort_order')
+    list_display = ('avatar_preview', 'name', 'url_display', 'description', 'sort_order')
     list_editable = ('sort_order',)
     search_fields = ('name', 'url')
     list_per_page = 20
+    readonly_fields = ('avatar_preview',)
+    fieldsets = (
+        ('基本信息', {
+            'fields': ('name', 'url', 'avatar', 'avatar_preview', 'description', 'sort_order')
+        }),
+    )
+
+    def avatar_preview(self, obj):
+        if obj and obj.avatar:
+            return format_html(
+                '<img src="{}" alt="{}" style="width:36px;height:36px;object-fit:contain;border-radius:8px;background:#fff;">',
+                obj.avatar,
+                obj.name,
+            )
+        return format_html('<span class="admin-preview">暂无头像</span>')
+    avatar_preview.short_description = '头像'
 
     def url_display(self, obj):
         return format_html(
