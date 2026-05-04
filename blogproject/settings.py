@@ -113,4 +113,11 @@ else:
 DEFAULT_FILE_STORAGE = STORAGES['default']['BACKEND']
 STATICFILES_STORAGE = STORAGES['staticfiles']['BACKEND']
 
+COMMENT_MAX_LINKS = int(os.environ.get('COMMENT_MAX_LINKS', '2'))
+COMMENT_BLOCKED_WORDS = [
+    word.strip()
+    for word in os.environ.get('COMMENT_BLOCKED_WORDS', '').split(',')
+    if word.strip()
+]
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

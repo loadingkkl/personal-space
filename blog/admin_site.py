@@ -109,6 +109,7 @@ class BlogAdminSite(AdminSite):
             'post_count': Post.objects.count(),
             'published_count': Post.objects.filter(is_published=True).count(),
             'comment_count': Comment.objects.filter(status=Comment.STATUS_APPROVED).count(),
+            'pending_comment_count': Comment.objects.filter(status=Comment.STATUS_PENDING).count(),
             'media_count': Media.objects.count(),
             'media_done_count': Media.objects.filter(status='done').count(),
             'total_views': Post.objects.aggregate(s=Sum('views'))['s'] or 0,

@@ -835,6 +835,18 @@ img { max-width: 100%; height: auto; display: block; }
 }
 .form-textarea { resize: vertical; min-height: 100px; }
 
+.form-errors,
+.errorlist {
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    border: 1px solid rgba(239, 68, 68, .24);
+    border-radius: var(--radius-sm);
+    background: rgba(239, 68, 68, .08);
+    color: #b91c1c;
+    font-size: .86rem;
+    list-style: none;
+}
+
 .btn {
     display: inline-flex;
     align-items: center;

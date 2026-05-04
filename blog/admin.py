@@ -1,7 +1,8 @@
-from django import forms
+﻿from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import GroupAdmin, UserAdmin
 from django.contrib.auth.models import Group, User
+from django.utils import timezone
 from django.utils.html import format_html
 
 from .admin_site import blog_admin_site
@@ -210,18 +211,19 @@ class FriendLinkAdmin(OperationLogMixin, admin.ModelAdmin):
 
 @admin.register(Comment, site=blog_admin_site)
 class CommentAdmin(OperationLogMixin, admin.ModelAdmin):
-    list_display = ('name', 'post', 'status_display', 'body_preview', 'created_time')
+    list_display = ('name', 'post', 'status_display', 'body_preview', 'ip_address', 'created_time')
     list_filter = ('status', 'created_time')
     search_fields = ('name', 'body')
     list_per_page = 20
-    readonly_fields = ('name', 'email', 'body', 'post', 'created_time')
-    actions = ('approve_comments', 'hide_comments')
+    readonly_fields = ('name', 'email', 'body', 'post', 'created_time', 'ip_address', 'user_agent', 'moderation_reason', 'approved_time')
+    actions = ('approve_comments', 'hide_comments', 'mark_as_spam', 'mark_as_pending')
 
     def status_display(self, obj):
         color = {
             Comment.STATUS_PENDING: 'amber',
             Comment.STATUS_APPROVED: 'emerald',
             Comment.STATUS_HIDDEN: 'slate',
+            Comment.STATUS_SPAM: 'rose',
         }.get(obj.status, 'slate')
         return format_html('<span class="admin-badge admin-badge--{}">{}</span>', color, obj.get_status_display())
     status_display.short_description = '审核状态'
@@ -232,27 +234,64 @@ class CommentAdmin(OperationLogMixin, admin.ModelAdmin):
         return format_html('<span class="admin-preview">{}</span>', text)
     body_preview.short_description = '内容预览'
 
+    @admin.action(description='通过选中的评论')
     def approve_comments(self, request, queryset):
-        count = queryset.update(status=Comment.STATUS_APPROVED)
+        updated = queryset.update(
+            status=Comment.STATUS_APPROVED,
+            approved_time=timezone.now(),
+            moderation_reason='',
+        )
         OperationLog.objects.create(
             actor=request.user,
             action=OperationLog.ACTION_REVIEW,
             object_type='评论',
-            object_repr=f'批量通过 {count} 条评论',
+            object_repr=f'批量通过 {updated} 条评论',
             detail='后台批量操作',
         )
-    approve_comments.short_description = '通过选中的评论'
+        self.message_user(request, f'已通过 {updated} 条评论。')
 
+    @admin.action(description='隐藏选中的评论')
     def hide_comments(self, request, queryset):
-        count = queryset.update(status=Comment.STATUS_HIDDEN)
+        updated = queryset.update(status=Comment.STATUS_HIDDEN)
         OperationLog.objects.create(
             actor=request.user,
             action=OperationLog.ACTION_REVIEW,
             object_type='评论',
-            object_repr=f'批量隐藏 {count} 条评论',
+            object_repr=f'批量隐藏 {updated} 条评论',
             detail='后台批量操作',
         )
-    hide_comments.short_description = '隐藏选中的评论'
+        self.message_user(request, f'已隐藏 {updated} 条评论。')
+
+    @admin.action(description='标记为垃圾评论')
+    def mark_as_spam(self, request, queryset):
+        updated = queryset.update(
+            status=Comment.STATUS_SPAM,
+            moderation_reason='后台手动标记',
+        )
+        OperationLog.objects.create(
+            actor=request.user,
+            action=OperationLog.ACTION_REVIEW,
+            object_type='评论',
+            object_repr=f'批量标记 {updated} 条垃圾评论',
+            detail='后台批量操作',
+        )
+        self.message_user(request, f'已标记 {updated} 条垃圾评论。')
+
+    @admin.action(description='移回待审核')
+    def mark_as_pending(self, request, queryset):
+        updated = queryset.update(
+            status=Comment.STATUS_PENDING,
+            approved_time=None,
+            moderation_reason='',
+        )
+        OperationLog.objects.create(
+            actor=request.user,
+            action=OperationLog.ACTION_REVIEW,
+            object_type='评论',
+            object_repr=f'批量移回 {updated} 条待审核评论',
+            detail='后台批量操作',
+        )
+        self.message_user(request, f'已移回 {updated} 条待审核评论。')
 
 
 @admin.register(OperationLog, site=blog_admin_site)

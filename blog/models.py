@@ -1,4 +1,4 @@
-from django.db import models
+﻿from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.utils import timezone
@@ -153,10 +153,12 @@ class Comment(models.Model):
     STATUS_PENDING = 'pending'
     STATUS_APPROVED = 'approved'
     STATUS_HIDDEN = 'hidden'
+    STATUS_SPAM = 'spam'
     STATUS_CHOICES = [
         (STATUS_PENDING, '待审核'),
         (STATUS_APPROVED, '已通过'),
         (STATUS_HIDDEN, '已隐藏'),
+        (STATUS_SPAM, '垃圾评论'),
     ]
 
     post = models.ForeignKey(Post, verbose_name='文章', on_delete=models.CASCADE, related_name='comments')
@@ -165,14 +167,25 @@ class Comment(models.Model):
     body = models.TextField('内容')
     status = models.CharField('审核状态', max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING, db_index=True)
     created_time = models.DateTimeField('创建时间', auto_now_add=True)
+    ip_address = models.GenericIPAddressField('IP 地址', blank=True, null=True)
+    user_agent = models.CharField('User agent', max_length=255, blank=True)
+    moderation_reason = models.CharField('审核备注', max_length=255, blank=True)
+    approved_time = models.DateTimeField('通过时间', blank=True, null=True)
 
     class Meta:
         verbose_name = '评论'
         verbose_name_plural = verbose_name
         ordering = ['-created_time']
+        indexes = [
+            models.Index(fields=['status', '-created_time']),
+        ]
 
     def __str__(self):
         return f'{self.name}: {self.body[:20]}'
+
+    @property
+    def is_approved(self):
+        return self.status == self.STATUS_APPROVED
 
 
 class OperationLog(models.Model):
@@ -206,3 +219,4 @@ class OperationLog(models.Model):
 
     def __str__(self):
         return f'{self.get_action_display()} {self.object_repr}'
+

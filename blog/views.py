@@ -1,11 +1,42 @@
-from django.shortcuts import render, get_object_or_404, redirect
+﻿from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView
 from django.contrib import messages
+from django.core.cache import cache
 from django.db.models import Q, Count
 from django.utils.html import escape
 from .models import Post, Category, Tag, Comment, Media, FriendLink
 from .forms import CommentForm
 
+
+COMMENT_RATE_LIMIT_SECONDS = 60
+
+
+def get_client_ip(request):
+    forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if forwarded_for:
+        return forwarded_for.split(',')[0].strip()
+    return request.META.get('REMOTE_ADDR')
+
+
+def is_comment_rate_limited(request, post_id):
+    ip_address = get_client_ip(request) or 'unknown'
+    cache_key = f'comment-rate:{post_id}:{ip_address}'
+    if cache.get(cache_key):
+        return True
+    cache.set(cache_key, True, COMMENT_RATE_LIMIT_SECONDS)
+    return False
+
+
+def get_spam_reason(comment):
+    body = comment.body.lower()
+    suspicious_phrases = ('viagra', 'casino', 'loan', 'crypto', '博彩', '贷款', '代开', '发票')
+    if any(phrase in body for phrase in suspicious_phrases):
+        return '命中垃圾评论关键词'
+    if body.count('\n') > 12:
+        return '评论换行过多'
+    if len(comment.body) > 1200:
+        return '评论内容过长'
+    return ''
 
 def render_article_body(body):
     toc = []
@@ -281,11 +312,28 @@ def about_view(request):
 def comment_view(request, pk=None, slug=None):
     post = get_object_or_404(Post, pk=pk) if pk else get_object_or_404(Post, slug=slug)
     if request.method == 'POST':
+        if is_comment_rate_limited(request, post.pk):
+            messages.error(request, '提交太频繁了，请稍后再试。')
+            return redirect(post.get_absolute_url() + '#comments')
+
         form = CommentForm(request.POST)
         if form.is_valid():
             comment = form.save(commit=False)
             comment.post = post
+            comment.ip_address = get_client_ip(request)
+            comment.user_agent = request.META.get('HTTP_USER_AGENT', '')[:255]
+            spam_reason = get_spam_reason(comment)
+            if spam_reason:
+                comment.status = Comment.STATUS_SPAM
+                comment.moderation_reason = spam_reason
+            else:
+                comment.status = Comment.STATUS_PENDING
             comment.save()
-            messages.success(request, '评论已提交，审核通过后会展示。')
+            if comment.status == Comment.STATUS_SPAM:
+                messages.warning(request, '评论已收到，系统会进一步审核。')
+            else:
+                messages.success(request, '评论已提交，审核通过后会显示。')
             return redirect(post.get_absolute_url() + '#comments')
+        messages.error(request, '评论提交失败，请检查内容后重试。')
     return redirect(post.get_absolute_url())
+
