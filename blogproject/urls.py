@@ -9,6 +9,4 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
-    media_root = getattr(settings, 'MEDIA_ROOT', None)
-    if media_root:
-        urlpatterns += static(settings.MEDIA_URL, document_root=media_root)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
