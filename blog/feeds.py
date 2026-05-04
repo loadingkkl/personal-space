@@ -1,5 +1,6 @@
 from django.contrib.syndication.views import Feed
 from django.urls import reverse
+from django.utils import timezone
 
 from .models import Post
 
@@ -9,7 +10,10 @@ class LatestPostsFeed(Feed):
     description = '星语博客最新文章'
 
     def items(self):
-        return Post.objects.filter(is_published=True).order_by('-created_time')[:20]
+        return Post.objects.filter(
+            is_published=True,
+            publish_time__lte=timezone.now(),
+        ).order_by('-publish_time')[:20]
 
     def item_title(self, item):
         return item.title
@@ -21,7 +25,7 @@ class LatestPostsFeed(Feed):
         return item.get_absolute_url()
 
     def item_pubdate(self, item):
-        return item.created_time
+        return item.publish_time
 
     def item_updateddate(self, item):
         return item.modified_time

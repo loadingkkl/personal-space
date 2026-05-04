@@ -5,3 +5,5 @@ dj-database-url>=3.1
 cloudinary>=1.44
 django-cloudinary-storage>=0.3.0
 whitenoise>=6.11
+Markdown>=3.10
+Pygments>=2.20

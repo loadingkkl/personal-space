@@ -1360,19 +1360,57 @@ fieldset.collapse h2 .collapse-toggle {
 }
 
 /* ====== Markdown Editor Preview ====== */
+.markdown-editor-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, .9fr);
+    gap: 14px;
+    align-items: start;
+}
+
+.markdown-toolbar {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-subtle);
+}
+
+.markdown-toolbar-btn {
+    min-width: 38px;
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-xs) !important;
+    background: var(--surface) !important;
+    color: var(--text) !important;
+    font-size: .78rem !important;
+    font-weight: 800 !important;
+    cursor: pointer;
+}
+
+.markdown-toolbar-btn:hover {
+    border-color: var(--primary) !important;
+    color: var(--primary) !important;
+    box-shadow: var(--shadow-xs);
+}
+
 textarea.markdown-editor {
     min-height: 360px;
     font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace !important;
     line-height: 1.75 !important;
+    width: 100% !important;
 }
 
 .markdown-preview-panel {
-    margin-top: 14px;
     border: 1px solid var(--border);
     border-radius: var(--radius);
     background: var(--surface);
     overflow: hidden;
     box-shadow: var(--shadow-xs);
+    min-height: 360px;
 }
 
 .markdown-preview-header {
@@ -1399,6 +1437,14 @@ textarea.markdown-editor {
     padding: 18px 20px;
     color: var(--text);
     line-height: 1.8;
+    max-height: 560px;
+    overflow: auto;
+}
+
+.markdown-preview-content h1 {
+    margin: 0 0 14px;
+    color: var(--text);
+    font-size: 1.35rem;
 }
 
 .markdown-preview-content h2 {
@@ -1424,6 +1470,42 @@ textarea.markdown-editor {
     padding-left: 1.2em;
 }
 
+.markdown-preview-content blockquote {
+    margin: 12px 0;
+    padding: 10px 12px;
+    border-left: 4px solid var(--primary-light);
+    background: var(--primary-50);
+    color: var(--text-secondary);
+}
+
+.markdown-preview-content img {
+    max-width: 100%;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-xs);
+}
+
+.markdown-preview-content code {
+    padding: 2px 5px;
+    border-radius: 5px;
+    background: #eef2f7;
+    color: #be123c;
+    font-size: .88em;
+}
+
+.markdown-preview-content pre {
+    padding: 14px;
+    border-radius: var(--radius-sm);
+    background: #0f172a;
+    color: #e5e7eb;
+    overflow: auto;
+}
+
+.markdown-preview-content pre code {
+    padding: 0;
+    background: transparent;
+    color: inherit;
+}
+
 .markdown-preview-empty {
     color: var(--text-tertiary);
 }
@@ -1436,6 +1518,10 @@ textarea.markdown-editor {
     .markdown-preview-header {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .markdown-editor-shell {
+        grid-template-columns: 1fr;
     }
 }
 

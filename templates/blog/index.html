@@ -18,7 +18,7 @@
                 <p class="carousel-excerpt">{{ post.excerpt|truncatechars:80 }}</p>
                 <div class="carousel-meta">
                     <span>{{ post.author }}</span>
-                    <span>{{ post.created_time|date:"Y/m/d" }}</span>
+                    <span>{{ post.publish_time|date:"Y/m/d" }}</span>
                     <span>&#128065; {{ post.views }}</span>
                 </div>
             </div>
@@ -55,7 +55,7 @@
         <div class="post-card-body">
             <div class="post-meta">
                 <a href="{% url 'blog:category' post.category.pk %}" class="post-category">{{ post.category }}</a>
-                <span class="post-date">{{ post.created_time|date:"Y年m月d日" }}</span>
+                <span class="post-date">{{ post.publish_time|date:"Y年m月d日" }}</span>
             </div>
             <h2 class="post-card-title">
                 <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>

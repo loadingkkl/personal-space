@@ -94,9 +94,10 @@ class BlogAdminSite(AdminSite):
         from .models import Post, Comment, Media, Category, Tag, FriendLink
 
         extra_context = extra_context or {}
+        live_posts = Post.objects.filter(is_published=True, publish_time__lte=timezone.now())
         extra_context['stats'] = {
             'post_count': Post.objects.count(),
-            'published_count': Post.objects.filter(is_published=True).count(),
+            'published_count': live_posts.count(),
             'comment_count': Comment.objects.filter(status=Comment.STATUS_APPROVED).count(),
             'pending_comment_count': Comment.objects.filter(status=Comment.STATUS_PENDING).count(),
             'media_count': Media.objects.count(),

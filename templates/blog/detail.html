@@ -16,7 +16,7 @@
         <h1 class="post-detail-title">{{ post.title }}</h1>
         <div class="post-detail-meta">
             <span>&#128100; {{ post.author }}</span>
-            <span>&#128197; {{ post.created_time|date:"Y年m月d日 H:i" }}</span>
+            <span>&#128197; {{ post.publish_time|date:"Y年m月d日 H:i" }}</span>
             <span>&#128065; {{ post.views }} 次阅读</span>
             <span>&#128172; {{ comment_list.count }} 条评论</span>
         </div>

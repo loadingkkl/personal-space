@@ -70,7 +70,7 @@
             <div class="article-card-content">
                 <div class="article-card-top">
                     <a href="{% url 'blog:articles' %}?cat={{ post.category.pk }}" class="article-card-cat">{{ post.category }}</a>
-                    <time class="article-card-time">{{ post.modified_time|date:"Y/m/d" }} 更新</time>
+                    <time class="article-card-time">{{ post.publish_time|date:"Y/m/d" }} 发布</time>
                 </div>
                 <h2 class="article-card-title">
                     <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>

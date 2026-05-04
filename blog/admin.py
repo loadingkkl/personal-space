@@ -15,12 +15,12 @@ blog_admin_site.register(Group, GroupAdmin)
 class PostAdminForm(forms.ModelForm):
     body = forms.CharField(
         label='正文',
-        help_text='支持 Markdown 小标题：## 二级标题、### 三级标题会自动生成文章目录；空行会分段，- 开头会渲染为列表。',
+        help_text='支持完整 Markdown：标题、列表、引用、链接、图片、表格、代码块。二级/三级标题会生成文章目录。',
         widget=forms.Textarea(attrs={
             'class': 'markdown-editor',
             'data-markdown-editor': 'true',
             'rows': 18,
-            'placeholder': '用 ## 写章节标题，用 ### 写小节标题；正文空行分段，- 开头写列表。',
+            'placeholder': '用 Markdown 写作。示例：## 标题、```python 代码块、![图片说明](图片地址)。',
         }),
     )
 
@@ -81,24 +81,23 @@ class TagAdmin(OperationLogMixin, admin.ModelAdmin):
 @admin.register(Post, site=blog_admin_site)
 class PostAdmin(OperationLogMixin, admin.ModelAdmin):
     form = PostAdminForm
-    list_display = ('title', 'slug', 'category_display', 'author', 'created_time', 'views_display', 'is_published', 'is_featured')
-    list_filter = ('category', 'author', 'created_time', 'is_published', 'is_featured')
-    search_fields = ('title', 'slug', 'body')
-    list_editable = ('is_published', 'is_featured')
-    date_hierarchy = 'created_time'
+    list_display = ('title', 'publish_state', 'category_display', 'author', 'publish_time', 'views_display', 'is_pinned', 'is_featured')
+    list_filter = ('category', 'author', 'publish_time', 'is_published', 'is_pinned', 'is_featured')
+    search_fields = ('title', 'body', 'excerpt')
+    list_editable = ('is_pinned', 'is_featured')
+    date_hierarchy = 'publish_time'
     filter_horizontal = ('tags',)
     list_per_page = 20
     list_display_links = ('title',)
     fieldsets = (
         ('基本信息', {
-            'fields': ('title', 'slug', 'category', 'tags', 'cover'),
+            'fields': ('title', 'category', 'tags', 'cover'),
         }),
         ('文章内容', {
             'fields': ('excerpt', 'body'),
         }),
         ('发布设置', {
-            'fields': ('is_published', 'is_featured', 'created_time'),
-            'classes': ('collapse',),
+            'fields': ('is_published', 'publish_time', 'is_pinned', 'is_featured', 'created_time'),
         }),
     )
 
@@ -114,6 +113,19 @@ class PostAdmin(OperationLogMixin, admin.ModelAdmin):
         return format_html('<span class="admin-count">{}</span>', obj.views)
     views_display.short_description = '阅读量'
     views_display.admin_order_field = 'views'
+
+    def publish_state(self, obj):
+        if not obj.is_published:
+            color, label = 'slate', '草稿'
+        elif obj.publish_time > timezone.now():
+            color, label = 'amber', '定时'
+        else:
+            color, label = 'emerald', '已发布'
+        if obj.is_pinned:
+            label = f'置顶 · {label}'
+        return format_html('<span class="admin-badge admin-badge--{}">{}</span>', color, label)
+    publish_state.short_description = '发布状态'
+    publish_state.admin_order_field = 'is_published'
 
     def save_model(self, request, obj, form, change):
         if not change:

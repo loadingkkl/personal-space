@@ -3,7 +3,9 @@ from django.views.generic import ListView, DetailView
 from django.contrib import messages
 from django.core.cache import cache
 from django.db.models import Q, Count
+from django.utils import timezone
 from django.utils.html import escape
+import markdown
 from .models import Post, Category, Tag, Comment, Media, FriendLink
 from .forms import CommentForm
 
@@ -38,64 +40,40 @@ def get_spam_reason(comment):
         return '评论内容过长'
     return ''
 
+def live_posts():
+    return Post.objects.filter(is_published=True, publish_time__lte=timezone.now())
+
+
+def flatten_toc(tokens):
+    items = []
+    for token in tokens:
+        items.append({
+            'id': token['id'],
+            'title': token['name'],
+            'level': token['level'],
+        })
+        items.extend(flatten_toc(token.get('children', [])))
+    return items
+
+
 def render_article_body(body):
-    toc = []
-    html_parts = []
-    paragraph_lines = []
-    list_items = []
-    heading_index = 0
-
-    def flush_paragraph():
-        if not paragraph_lines:
-            return
-        text = '<br>'.join(escape(line) for line in paragraph_lines)
-        html_parts.append(f'<p>{text}</p>')
-        paragraph_lines.clear()
-
-    def flush_list():
-        if not list_items:
-            return
-        items_html = ''.join(f'<li>{escape(item)}</li>' for item in list_items)
-        html_parts.append(f'<ul>{items_html}</ul>')
-        list_items.clear()
-
-    for raw_line in body.splitlines():
-        line = raw_line.strip()
-        if not line:
-            flush_paragraph()
-            flush_list()
-            continue
-
-        level = None
-        title = ''
-        if line.startswith('### '):
-            level = 3
-            title = line[4:].strip()
-        elif line.startswith('## '):
-            level = 2
-            title = line[3:].strip()
-
-        if level and title:
-            flush_paragraph()
-            flush_list()
-            heading_index += 1
-            anchor = f'section-{heading_index}'
-            toc.append({'id': anchor, 'title': title, 'level': level})
-            html_parts.append(
-                f'<h{level} id="{anchor}" class="article-heading article-heading-{level}">'
-                f'{escape(title)}</h{level}>'
-            )
-        elif line.startswith('- ') and line[2:].strip():
-            flush_paragraph()
-            list_items.append(line[2:].strip())
-        else:
-            flush_list()
-            paragraph_lines.append(raw_line)
-
-    flush_paragraph()
-    flush_list()
-    return ''.join(html_parts), toc
-
+    md = markdown.Markdown(
+        extensions=['extra', 'toc', 'codehilite', 'sane_lists'],
+        extension_configs={
+            'toc': {
+                'anchorlink': False,
+                'permalink': False,
+                'toc_depth': '2-3',
+            },
+            'codehilite': {
+                'guess_lang': False,
+                'linenums': False,
+            },
+        },
+        output_format='html5',
+    )
+    html = md.convert(escape(body))
+    return html, flatten_toc(md.toc_tokens)
 
 class IndexView(ListView):
     model = Post
@@ -104,14 +82,15 @@ class IndexView(ListView):
     paginate_by = 6
 
     def get_queryset(self):
-        return Post.objects.filter(is_published=True).select_related('category', 'author')
+        return live_posts().select_related('category', 'author').order_by('-is_pinned', '-publish_time')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['featured_posts'] = (
-            Post.objects.filter(is_published=True, is_featured=True, cover__isnull=False)
+            live_posts().filter(is_featured=True, cover__isnull=False)
             .exclude(cover='')
-            .select_related('category', 'author')[:5]
+            .select_related('category', 'author')
+            .order_by('-is_pinned', '-publish_time')[:5]
         )
         return context
 
@@ -120,17 +99,13 @@ class PostDetailView(DetailView):
     model = Post
     template_name = 'blog/detail.html'
     context_object_name = 'post'
-    slug_field = 'slug'
-    slug_url_kwarg = 'slug'
 
     def get_queryset(self):
-        return Post.objects.filter(is_published=True)
+        return live_posts()
 
     def get_object(self, queryset=None):
         queryset = queryset or self.get_queryset()
-        if 'pk' in self.kwargs:
-            return get_object_or_404(queryset, pk=self.kwargs['pk'])
-        return get_object_or_404(queryset, slug=self.kwargs['slug'])
+        return get_object_or_404(queryset, pk=self.kwargs['pk'])
 
     def get(self, request, *args, **kwargs):
         response = super().get(request, *args, **kwargs)
@@ -144,12 +119,12 @@ class PostDetailView(DetailView):
         body_html, toc_items = render_article_body(self.object.body)
         context['body_html'] = body_html
         context['toc_items'] = toc_items
-        prev_post = Post.objects.filter(
-            created_time__gt=self.object.created_time, is_published=True
-        ).order_by('created_time').first()
-        next_post = Post.objects.filter(
-            created_time__lt=self.object.created_time, is_published=True
-        ).order_by('-created_time').first()
+        prev_post = live_posts().filter(
+            publish_time__gt=self.object.publish_time
+        ).order_by('publish_time').first()
+        next_post = live_posts().filter(
+            publish_time__lt=self.object.publish_time
+        ).order_by('-publish_time').first()
         context['prev_post'] = prev_post
         context['next_post'] = next_post
         return context
@@ -163,7 +138,7 @@ class CategoryView(ListView):
 
     def get_queryset(self):
         self.category = get_object_or_404(Category, pk=self.kwargs.get('pk'))
-        return Post.objects.filter(category=self.category, is_published=True)
+        return live_posts().filter(category=self.category).order_by('-is_pinned', '-publish_time')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -179,7 +154,7 @@ class TagView(ListView):
 
     def get_queryset(self):
         self.tag = get_object_or_404(Tag, pk=self.kwargs.get('pk'))
-        return Post.objects.filter(tags=self.tag, is_published=True)
+        return live_posts().filter(tags=self.tag).order_by('-is_pinned', '-publish_time')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -197,10 +172,9 @@ class SearchView(ListView):
         self.q = self.request.GET.get('q', '').strip()
         if not self.q:
             return Post.objects.none()
-        return Post.objects.filter(
+        return live_posts().filter(
             Q(title__icontains=self.q) | Q(body__icontains=self.q),
-            is_published=True,
-        )
+        ).order_by('-is_pinned', '-publish_time')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -218,9 +192,7 @@ class ArchiveView(ListView):
     def get_queryset(self):
         year = self.kwargs.get('year')
         month = self.kwargs.get('month')
-        return Post.objects.filter(
-            created_time__year=year, created_time__month=month, is_published=True
-        )
+        return live_posts().filter(publish_time__year=year, publish_time__month=month).order_by('-is_pinned', '-publish_time')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -229,7 +201,7 @@ class ArchiveView(ListView):
 
 
 SORT_OPTIONS = {
-    'latest': ('-modified_time', '最近更新'),
+    'latest': ('-publish_time', '最近发布'),
     'views': ('-views', '最多阅读'),
     'comments': ('-comment_count', '最多评论'),
 }
@@ -243,7 +215,7 @@ class ArticleListView(ListView):
 
     def get_queryset(self):
         qs = (
-            Post.objects.filter(is_published=True)
+            live_posts()
             .annotate(comment_count=Count('comments', filter=Q(comments__status=Comment.STATUS_APPROVED)))
             .select_related('category', 'author')
             .prefetch_related('tags')
@@ -258,13 +230,16 @@ class ArticleListView(ListView):
         if self.current_tag:
             qs = qs.filter(tags__pk=self.current_tag)
 
+        if self.current_sort == 'latest':
+            return qs.order_by('-is_pinned', '-publish_time')
         order_field = SORT_OPTIONS.get(self.current_sort, SORT_OPTIONS['latest'])[0]
         return qs.order_by(order_field)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['all_categories'] = Category.objects.annotate(num_posts=Count('post')).filter(num_posts__gt=0)
-        context['all_tags'] = Tag.objects.annotate(num_posts=Count('post')).filter(num_posts__gt=0)
+        live_filter = Q(post__is_published=True, post__publish_time__lte=timezone.now())
+        context['all_categories'] = Category.objects.annotate(num_posts=Count('post', filter=live_filter)).filter(num_posts__gt=0)
+        context['all_tags'] = Tag.objects.annotate(num_posts=Count('post', filter=live_filter)).filter(num_posts__gt=0)
         context['sort_options'] = SORT_OPTIONS
         context['current_category'] = self.current_category
         context['current_tag'] = self.current_tag
@@ -315,8 +290,8 @@ def about_view(request):
     return render(request, 'blog/about.html')
 
 
-def comment_view(request, pk=None, slug=None):
-    post = get_object_or_404(Post, pk=pk) if pk else get_object_or_404(Post, slug=slug)
+def comment_view(request, pk):
+    post = get_object_or_404(live_posts(), pk=pk)
     if request.method == 'POST':
         if is_comment_rate_limited(request, post.pk):
             messages.error(request, '提交太频繁了，请稍后再试。')
@@ -342,4 +317,5 @@ def comment_view(request, pk=None, slug=None):
             return redirect(post.get_absolute_url() + '#comments')
         messages.error(request, '评论提交失败，请检查内容后重试。')
     return redirect(post.get_absolute_url())
+
 
