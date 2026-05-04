@@ -2,8 +2,53 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView
 from django.contrib import messages
 from django.db.models import Q, Count
+from django.utils.html import escape
 from .models import Post, Category, Tag, Comment, Media, FriendLink
 from .forms import CommentForm
+
+
+def render_article_body(body):
+    toc = []
+    html_parts = []
+    paragraph_lines = []
+    heading_index = 0
+
+    def flush_paragraph():
+        if not paragraph_lines:
+            return
+        text = '<br>'.join(escape(line) for line in paragraph_lines)
+        html_parts.append(f'<p>{text}</p>')
+        paragraph_lines.clear()
+
+    for raw_line in body.splitlines():
+        line = raw_line.strip()
+        if not line:
+            flush_paragraph()
+            continue
+
+        level = None
+        title = ''
+        if line.startswith('### '):
+            level = 3
+            title = line[4:].strip()
+        elif line.startswith('## '):
+            level = 2
+            title = line[3:].strip()
+
+        if level and title:
+            flush_paragraph()
+            heading_index += 1
+            anchor = f'section-{heading_index}'
+            toc.append({'id': anchor, 'title': title, 'level': level})
+            html_parts.append(
+                f'<h{level} id="{anchor}" class="article-heading article-heading-{level}">'
+                f'{escape(title)}</h{level}>'
+            )
+        else:
+            paragraph_lines.append(raw_line)
+
+    flush_paragraph()
+    return ''.join(html_parts), toc
 
 
 class IndexView(ListView):
@@ -42,6 +87,9 @@ class PostDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         context['form'] = CommentForm()
         context['comment_list'] = self.object.comments.all()
+        body_html, toc_items = render_article_body(self.object.body)
+        context['body_html'] = body_html
+        context['toc_items'] = toc_items
         prev_post = Post.objects.filter(
             created_time__gt=self.object.created_time, is_published=True
         ).order_by('created_time').first()

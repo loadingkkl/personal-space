@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% block layout_class %}detail-layout{% endblock %}
 
 {% block title %}{{ post.title }} - 我的博客{% endblock %}
 
@@ -29,7 +30,7 @@
     </header>
 
     <div class="post-detail-body">
-        {{ post.body|linebreaksbr }}
+        {{ body_html|safe }}
     </div>
 
     <nav class="post-nav">
@@ -90,4 +91,65 @@
         </form>
     </div>
 </section>
+{% endblock %}
+
+{% block sidebar %}
+<div class="article-toc-card" role="navigation" aria-label="文章目录">
+    <div class="toc-orbit" aria-hidden="true"></div>
+    <div class="toc-header">
+        <span class="toc-kicker">ON THIS PAGE</span>
+        <h2>文章目录</h2>
+    </div>
+    {% if toc_items %}
+    <nav class="article-toc-nav">
+        {% for item in toc_items %}
+        <a href="#{{ item.id }}" class="toc-link toc-level-{{ item.level }}" data-target="{{ item.id }}">
+            <span class="toc-dot"></span>
+            <span class="toc-text">{{ item.title }}</span>
+        </a>
+        {% endfor %}
+    </nav>
+    {% else %}
+    <div class="toc-empty">
+        <span>暂无目录</span>
+        <p>给正文添加 ## 或 ### 小标题后，这里会自动生成目录。</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+(() => {
+    const links = Array.from(document.querySelectorAll('.toc-link'));
+    const headings = links
+        .map(link => document.getElementById(link.dataset.target))
+        .filter(Boolean);
+
+    links.forEach(link => {
+        link.addEventListener('click', event => {
+            event.preventDefault();
+            const target = document.getElementById(link.dataset.target);
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                history.replaceState(null, '', `#${target.id}`);
+            }
+        });
+    });
+
+    if (!headings.length) return;
+
+    const activate = id => {
+        links.forEach(link => link.classList.toggle('active', link.dataset.target === id));
+    };
+
+    const observer = new IntersectionObserver(entries => {
+        const visible = entries
+            .filter(entry => entry.isIntersecting)
+            .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        if (visible) activate(visible.target.id);
+    }, { rootMargin: '-18% 0px -68% 0px', threshold: 0.01 });
+
+    headings.forEach(heading => observer.observe(heading));
+    activate(headings[0].id);
+})();
+</script>
 {% endblock %}
