@@ -9,11 +9,12 @@ SECRET_KEY = os.environ.get(
 )
 
 DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1')
+if os.environ.get('VERCEL') and 'DEBUG' not in os.environ:
+    DEBUG = False
 
 ALLOWED_HOSTS = ['*', '.vercel.app', '.now.sh']
 
 INSTALLED_APPS = [
-    'cloudinary_storage',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -26,6 +27,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
