@@ -46,6 +46,11 @@ class CommentModerationTests(TestCase):
         detail = self.client.get(self.post.get_absolute_url())
         self.assertContains(detail, 'A thoughtful comment.')
 
+    def test_post_absolute_url_uses_stable_id_route(self):
+        self.assertEqual(self.post.get_absolute_url(), f'/post/id/{self.post.pk}/')
+        response = self.client.get(self.post.get_absolute_url())
+        self.assertEqual(response.status_code, 200)
+
     def test_honeypot_rejects_bot_submission(self):
         response = self.client.post(
             reverse('blog:comment', args=[self.post.pk]),

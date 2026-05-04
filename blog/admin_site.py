@@ -33,7 +33,6 @@ class BlogAdminSite(AdminSite):
         urls = super().get_urls()
         custom_urls = [
             path('health/', self.admin_view(self.health_view), name='health'),
-            path('media-health/', self.admin_view(self.media_health_view), name='media_health'),
             path('backup/', self.admin_view(self.backup_view), name='backup'),
         ]
         return custom_urls + urls
@@ -47,16 +46,6 @@ class BlogAdminSite(AdminSite):
             'health': get_deployment_health(),
         }
         return TemplateResponse(request, 'admin/health.html', context)
-
-    def media_health_view(self, request):
-        from .ops import get_media_resource_health
-
-        context = {
-            **self.each_context(request),
-            'title': '媒体资源健康检查',
-            'media_health': get_media_resource_health(),
-        }
-        return TemplateResponse(request, 'admin/media_health.html', context)
 
     def backup_view(self, request):
         from .models import Category, Comment, FriendLink, Media, OperationLog, Post, Tag

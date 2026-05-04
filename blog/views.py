@@ -126,6 +126,12 @@ class PostDetailView(DetailView):
     def get_queryset(self):
         return Post.objects.filter(is_published=True)
 
+    def get_object(self, queryset=None):
+        queryset = queryset or self.get_queryset()
+        if 'pk' in self.kwargs:
+            return get_object_or_404(queryset, pk=self.kwargs['pk'])
+        return get_object_or_404(queryset, slug=self.kwargs['slug'])
+
     def get(self, request, *args, **kwargs):
         response = super().get(request, *args, **kwargs)
         self.object.increase_views()

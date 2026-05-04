@@ -1,86 +1,10 @@
 import os
-import urllib.request
 from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib.staticfiles import finders
 from django.core.files.storage import default_storage
 from django.db import connection
-
-
-def probe_url(url, timeout=4):
-    if not url:
-        return 'warning', '未配置', '没有可检查的 URL。'
-    if url.startswith('/'):
-        return 'warning', '站内路径', '这是站内相对路径，线上使用 Cloudinary 后会变成可直接检查的完整 URL。'
-    try:
-        request = urllib.request.Request(url, method='HEAD', headers={'User-Agent': 'Django health check'})
-        with urllib.request.urlopen(request, timeout=timeout) as response:
-            code = response.getcode()
-        if 200 <= code < 400:
-            return 'ok', str(code), '资源可访问。'
-        return 'warning', str(code), '资源返回非成功状态。'
-    except Exception:
-        try:
-            request = urllib.request.Request(url, headers={'User-Agent': 'Django health check'})
-            with urllib.request.urlopen(request, timeout=timeout) as response:
-                code = response.getcode()
-            if 200 <= code < 400:
-                return 'ok', str(code), '资源可访问。'
-            return 'warning', str(code), '资源返回非成功状态。'
-        except Exception as exc:  # pragma: no cover - network differs per deployment
-            return 'error', '访问失败', str(exc)
-
-
-def get_media_resource_health():
-    from .models import FriendLink, Media, Post
-
-    checks = []
-
-    for post in Post.objects.filter(cover__isnull=False).exclude(cover='')[:80]:
-        status, label, detail = probe_url(post.cover.url)
-        checks.append({
-            'kind': '文章封面',
-            'name': post.title,
-            'url': post.cover.url,
-            'status': status,
-            'label': label,
-            'detail': detail,
-        })
-
-    for item in Media.objects.filter(cover__isnull=False).exclude(cover='')[:120]:
-        status, label, detail = probe_url(item.cover.url)
-        checks.append({
-            'kind': item.get_media_type_display(),
-            'name': item.title,
-            'url': item.cover.url,
-            'status': status,
-            'label': label,
-            'detail': detail,
-        })
-
-    for link in FriendLink.objects.exclude(avatar='')[:120]:
-        status, label, detail = probe_url(link.avatar)
-        checks.append({
-            'kind': '友链头像',
-            'name': link.name,
-            'url': link.avatar,
-            'status': status,
-            'label': label,
-            'detail': detail,
-        })
-
-    counts = {
-        'ok': sum(1 for item in checks if item['status'] == 'ok'),
-        'warning': sum(1 for item in checks if item['status'] == 'warning'),
-        'error': sum(1 for item in checks if item['status'] == 'error'),
-    }
-    overall = 'error' if counts['error'] else ('warning' if counts['warning'] else 'ok')
-    return {
-        'overall': overall,
-        'counts': counts,
-        'checks': checks,
-    }
 
 
 def _status(ok=True, level='ok'):

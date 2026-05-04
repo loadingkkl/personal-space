@@ -51,8 +51,6 @@ class Post(models.Model):
         return self.title
 
     def get_absolute_url(self):
-        if self.slug:
-            return reverse('blog:detail', kwargs={'slug': self.slug})
         return reverse('blog:detail_by_pk', kwargs={'pk': self.pk})
 
     def _build_unique_slug(self):
