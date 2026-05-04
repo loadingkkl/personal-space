@@ -89,6 +89,8 @@ class PostDetailView(DetailView):
     model = Post
     template_name = 'blog/detail.html'
     context_object_name = 'post'
+    slug_field = 'slug'
+    slug_url_kwarg = 'slug'
 
     def get_queryset(self):
         return Post.objects.filter(is_published=True)
@@ -101,7 +103,7 @@ class PostDetailView(DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['form'] = CommentForm()
-        context['comment_list'] = self.object.comments.all()
+        context['comment_list'] = self.object.comments.filter(status=Comment.STATUS_APPROVED)
         body_html, toc_items = render_article_body(self.object.body)
         context['body_html'] = body_html
         context['toc_items'] = toc_items
@@ -205,7 +207,7 @@ class ArticleListView(ListView):
     def get_queryset(self):
         qs = (
             Post.objects.filter(is_published=True)
-            .annotate(comment_count=Count('comments'))
+            .annotate(comment_count=Count('comments', filter=Q(comments__status=Comment.STATUS_APPROVED)))
             .select_related('category', 'author')
             .prefetch_related('tags')
         )
@@ -276,14 +278,14 @@ def about_view(request):
     return render(request, 'blog/about.html')
 
 
-def comment_view(request, pk):
-    post = get_object_or_404(Post, pk=pk)
+def comment_view(request, pk=None, slug=None):
+    post = get_object_or_404(Post, pk=pk) if pk else get_object_or_404(Post, slug=slug)
     if request.method == 'POST':
         form = CommentForm(request.POST)
         if form.is_valid():
             comment = form.save(commit=False)
             comment.post = post
             comment.save()
-            messages.success(request, '评论发表成功！')
+            messages.success(request, '评论已提交，审核通过后会展示。')
             return redirect(post.get_absolute_url() + '#comments')
     return redirect(post.get_absolute_url())

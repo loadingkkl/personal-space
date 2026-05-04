@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.text import slugify
 
 
 class Category(models.Model):
@@ -28,6 +29,7 @@ class Tag(models.Model):
 
 class Post(models.Model):
     title = models.CharField('标题', max_length=200)
+    slug = models.SlugField('Slug', max_length=120, unique=True, blank=True, allow_unicode=True)
     body = models.TextField('正文')
     excerpt = models.CharField('摘要', max_length=300, blank=True)
     cover = models.ImageField('封面图', upload_to='covers/%Y/%m/', blank=True, null=True)
@@ -49,7 +51,30 @@ class Post(models.Model):
         return self.title
 
     def get_absolute_url(self):
-        return reverse('blog:detail', kwargs={'pk': self.pk})
+        if self.slug:
+            return reverse('blog:detail', kwargs={'slug': self.slug})
+        return reverse('blog:detail_by_pk', kwargs={'pk': self.pk})
+
+    def _build_unique_slug(self):
+        base_slug = slugify(self.title, allow_unicode=True)[:90] or f'post-{timezone.now():%Y%m%d%H%M%S}'
+        slug = base_slug
+        suffix = 2
+        qs = Post.objects.filter(slug=slug)
+        if self.pk:
+            qs = qs.exclude(pk=self.pk)
+        while qs.exists():
+            suffix_text = f'-{suffix}'
+            slug = f'{base_slug[:120 - len(suffix_text)]}{suffix_text}'
+            qs = Post.objects.filter(slug=slug)
+            if self.pk:
+                qs = qs.exclude(pk=self.pk)
+            suffix += 1
+        return slug
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = self._build_unique_slug()
+        super().save(*args, **kwargs)
 
     def increase_views(self):
         self.views += 1
@@ -125,10 +150,20 @@ class FriendLink(models.Model):
 
 
 class Comment(models.Model):
+    STATUS_PENDING = 'pending'
+    STATUS_APPROVED = 'approved'
+    STATUS_HIDDEN = 'hidden'
+    STATUS_CHOICES = [
+        (STATUS_PENDING, '待审核'),
+        (STATUS_APPROVED, '已通过'),
+        (STATUS_HIDDEN, '已隐藏'),
+    ]
+
     post = models.ForeignKey(Post, verbose_name='文章', on_delete=models.CASCADE, related_name='comments')
     name = models.CharField('昵称', max_length=100)
     email = models.EmailField('邮箱')
     body = models.TextField('内容')
+    status = models.CharField('审核状态', max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING, db_index=True)
     created_time = models.DateTimeField('创建时间', auto_now_add=True)
 
     class Meta:
@@ -138,3 +173,36 @@ class Comment(models.Model):
 
     def __str__(self):
         return f'{self.name}: {self.body[:20]}'
+
+
+class OperationLog(models.Model):
+    ACTION_CREATE = 'create'
+    ACTION_UPDATE = 'update'
+    ACTION_DELETE = 'delete'
+    ACTION_REVIEW = 'review'
+    ACTION_BACKUP = 'backup'
+    ACTION_RESTORE = 'restore'
+    ACTION_CHOICES = [
+        (ACTION_CREATE, '新增'),
+        (ACTION_UPDATE, '修改'),
+        (ACTION_DELETE, '删除'),
+        (ACTION_REVIEW, '审核'),
+        (ACTION_BACKUP, '备份'),
+        (ACTION_RESTORE, '恢复'),
+    ]
+
+    actor = models.ForeignKey(User, verbose_name='操作人', on_delete=models.SET_NULL, null=True, blank=True)
+    action = models.CharField('操作类型', max_length=20, choices=ACTION_CHOICES)
+    object_type = models.CharField('对象类型', max_length=100)
+    object_id = models.CharField('对象 ID', max_length=64, blank=True)
+    object_repr = models.CharField('对象名称', max_length=255)
+    detail = models.TextField('详情', blank=True)
+    created_time = models.DateTimeField('操作时间', auto_now_add=True)
+
+    class Meta:
+        verbose_name = '操作日志'
+        verbose_name_plural = verbose_name
+        ordering = ['-created_time']
+
+    def __str__(self):
+        return f'{self.get_action_display()} {self.object_repr}'

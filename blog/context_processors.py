@@ -15,7 +15,7 @@ def blog_sidebar(request):
     stats = {
         'post_count': Post.objects.filter(is_published=True).count(),
         'category_count': Category.objects.count(),
-        'comment_count': Comment.objects.count(),
+        'comment_count': Comment.objects.filter(status=Comment.STATUS_APPROVED).count(),
         'tag_count': Tag.objects.count(),
     }
 

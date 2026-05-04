@@ -1613,3 +1613,57 @@ textarea.markdown-editor {
         grid-template-columns: 1fr;
     }
 }
+
+/* ====== Backup ====== */
+.backup-panel {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 18px;
+}
+
+.backup-panel section {
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow-xs);
+}
+
+.backup-panel h2 {
+    margin: 0 0 12px !important;
+    color: var(--text) !important;
+    font-size: 1.05rem !important;
+}
+
+.backup-panel p {
+    color: var(--text-secondary);
+    line-height: 1.7;
+}
+
+.backup-model-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.backup-model-list span {
+    padding: 6px 10px;
+    border-radius: var(--radius-full);
+    background: var(--primary-50);
+    color: var(--primary);
+    font-size: .82rem;
+    font-weight: 700;
+}
+
+.backup-form {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+@media (max-width: 767px) {
+    .backup-panel {
+        grid-template-columns: 1fr;
+    }
+}

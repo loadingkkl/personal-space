@@ -1,0 +1,67 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+    &rsaquo; 媒体资源健康检查
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="health-hero health-hero--{{ media_health.overall }}">
+    <div>
+        <span class="health-hero__eyebrow">Media Health</span>
+        <h1>媒体资源健康检查</h1>
+        <p>检查文章封面、书影音封面、友链头像是否可以访问。</p>
+    </div>
+    <div class="health-score">
+        <strong>{{ media_health.counts.ok }}</strong>
+        <span>项正常</span>
+    </div>
+</div>
+
+<div class="health-summary">
+    <div class="health-summary__item health-summary__item--ok">
+        <strong>{{ media_health.counts.ok }}</strong>
+        <span>正常</span>
+    </div>
+    <div class="health-summary__item health-summary__item--warning">
+        <strong>{{ media_health.counts.warning }}</strong>
+        <span>提醒</span>
+    </div>
+    <div class="health-summary__item health-summary__item--error">
+        <strong>{{ media_health.counts.error }}</strong>
+        <span>异常</span>
+    </div>
+</div>
+
+<div class="health-list">
+    {% for item in media_health.checks %}
+    <section class="health-check health-check--{{ item.status }}">
+        <div class="health-check__status"></div>
+        <div class="health-check__body">
+            <div class="health-check__top">
+                <h2>{{ item.kind }} · {{ item.name }}</h2>
+                <span>{{ item.label }}</span>
+            </div>
+            <p>{{ item.detail }}</p>
+            {% if item.url %}
+            <p><a href="{{ item.url }}" target="_blank" rel="noopener noreferrer">{{ item.url }}</a></p>
+            {% endif %}
+        </div>
+    </section>
+    {% empty %}
+    <section class="health-check health-check--warning">
+        <div class="health-check__status"></div>
+        <div class="health-check__body">
+            <div class="health-check__top">
+                <h2>暂无可检查资源</h2>
+                <span>空列表</span>
+            </div>
+            <p>当前没有文章封面、书影音封面或友链头像。</p>
+        </div>
+    </section>
+    {% endfor %}
+</div>
+{% endblock %}
