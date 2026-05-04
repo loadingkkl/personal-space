@@ -11,6 +11,7 @@ def render_article_body(body):
     toc = []
     html_parts = []
     paragraph_lines = []
+    list_items = []
     heading_index = 0
 
     def flush_paragraph():
@@ -20,10 +21,18 @@ def render_article_body(body):
         html_parts.append(f'<p>{text}</p>')
         paragraph_lines.clear()
 
+    def flush_list():
+        if not list_items:
+            return
+        items_html = ''.join(f'<li>{escape(item)}</li>' for item in list_items)
+        html_parts.append(f'<ul>{items_html}</ul>')
+        list_items.clear()
+
     for raw_line in body.splitlines():
         line = raw_line.strip()
         if not line:
             flush_paragraph()
+            flush_list()
             continue
 
         level = None
@@ -37,6 +46,7 @@ def render_article_body(body):
 
         if level and title:
             flush_paragraph()
+            flush_list()
             heading_index += 1
             anchor = f'section-{heading_index}'
             toc.append({'id': anchor, 'title': title, 'level': level})
@@ -44,10 +54,15 @@ def render_article_body(body):
                 f'<h{level} id="{anchor}" class="article-heading article-heading-{level}">'
                 f'{escape(title)}</h{level}>'
             )
+        elif line.startswith('- ') and line[2:].strip():
+            flush_paragraph()
+            list_items.append(line[2:].strip())
         else:
+            flush_list()
             paragraph_lines.append(raw_line)
 
     flush_paragraph()
+    flush_list()
     return ''.join(html_parts), toc
 
 

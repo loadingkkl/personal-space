@@ -1,3 +1,6 @@
+import os
+
+from django.conf import settings
 from django.contrib.admin import AdminSite
 from django.db.models import Sum
 from django.utils import timezone
@@ -7,6 +10,18 @@ class BlogAdminSite(AdminSite):
     site_header = '星语博客'
     site_title = '星语管理后台'
     index_title = '管理中心'
+
+    def each_context(self, request):
+        context = super().each_context(request)
+        is_vercel = bool(os.environ.get('VERCEL'))
+        has_database_url = bool(os.environ.get('DATABASE_URL'))
+        context.update({
+            'admin_environment': 'Vercel 线上' if is_vercel else '本地开发',
+            'admin_environment_class': 'production' if is_vercel else 'local',
+            'admin_database_label': 'PostgreSQL / DATABASE_URL' if has_database_url else 'SQLite 本地数据库',
+            'admin_debug_enabled': settings.DEBUG,
+        })
+        return context
 
     def index(self, request, extra_context=None):
         from .models import Post, Comment, Media, Category, Tag, FriendLink

@@ -7,6 +7,21 @@
     <p>{{ today }} · 这里是星语博客的管理中心</p>
 </div>
 
+<div class="environment-panel environment-panel--{{ admin_environment_class }}">
+    <div>
+        <span class="environment-panel__eyebrow">当前操作环境</span>
+        <strong>{{ admin_environment }}</strong>
+    </div>
+    <div>
+        <span>数据库</span>
+        <strong>{{ admin_database_label }}</strong>
+    </div>
+    <div>
+        <span>调试模式</span>
+        <strong>{% if admin_debug_enabled %}已开启{% else %}已关闭{% endif %}</strong>
+    </div>
+</div>
+
 <div class="stats-grid">
     <div class="stat-card stat-card--indigo">
         <div class="stat-card__icon">📝</div>

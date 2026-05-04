@@ -1,12 +1,30 @@
 from django.contrib import admin
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.admin import UserAdmin, GroupAdmin
+from django import forms
 from django.utils.html import format_html
 from .models import Category, Tag, Post, Comment, Media, FriendLink
 from .admin_site import blog_admin_site
 
 blog_admin_site.register(User, UserAdmin)
 blog_admin_site.register(Group, GroupAdmin)
+
+
+class PostAdminForm(forms.ModelForm):
+    body = forms.CharField(
+        label='正文',
+        help_text='支持 Markdown 小标题：## 二级标题、### 三级标题会自动生成文章目录；空行会分段，- 开头会渲染为列表。',
+        widget=forms.Textarea(attrs={
+            'class': 'markdown-editor',
+            'data-markdown-editor': 'true',
+            'rows': 18,
+            'placeholder': '用 ## 写章节标题，用 ### 写小节标题；正文空行分段，- 开头写列表。',
+        }),
+    )
+
+    class Meta:
+        model = Post
+        fields = '__all__'
 
 
 @admin.register(Category, site=blog_admin_site)
@@ -33,6 +51,7 @@ class TagAdmin(admin.ModelAdmin):
 
 @admin.register(Post, site=blog_admin_site)
 class PostAdmin(admin.ModelAdmin):
+    form = PostAdminForm
     list_display = ('title', 'category_display', 'author', 'created_time', 'views_display', 'is_published', 'is_featured')
     list_filter = ('category', 'author', 'created_time', 'is_published', 'is_featured')
     search_fields = ('title', 'body')
@@ -74,6 +93,9 @@ class PostAdmin(admin.ModelAdmin):
         if not change:
             obj.author = request.user
         super().save_model(request, obj, form, change)
+
+    class Media:
+        js = ('js/admin_markdown_preview.js',)
 
 
 @admin.register(Media, site=blog_admin_site)

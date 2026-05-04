@@ -9,6 +9,9 @@
         <img src="{% static 'avatar.png' %}" alt="星语" class="admin-logo">
         星语博客
         <span class="admin-brand-badge">管理</span>
+        <span class="admin-env-badge admin-env-badge--{{ admin_environment_class }}" title="{{ admin_database_label }}{% if admin_debug_enabled %} · DEBUG{% endif %}">
+            {{ admin_environment }}
+        </span>
     </a>
 </div>
 {% endblock %}

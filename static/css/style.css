@@ -520,6 +520,16 @@ img { max-width: 100%; height: auto; display: block; }
 }
 .post-detail-body p { margin-bottom: 1em; }
 
+.post-detail-body ul {
+    margin: 0 0 1.15em 1.2em;
+    padding: 0;
+}
+
+.post-detail-body li {
+    margin: .35em 0;
+    padding-left: .15em;
+}
+
 .post-detail-body .article-heading {
     scroll-margin-top: 86px;
     color: var(--text);
