@@ -43,6 +43,7 @@ body {
     font-family: var(--font) !important;
     background: var(--bg) !important;
     color: var(--text);
+    overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -280,25 +281,52 @@ div.breadcrumbs a:hover { color: var(--primary) !important; }
 }
 
 /* ====== Dashboard ====== */
-.dashboard #content { width: 100%; }
+.dashboard #content {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 280px);
+    gap: 20px;
+    align-items: start;
+    overflow-x: hidden;
+}
+
+.dashboard .admin-welcome,
+.dashboard .environment-panel,
+.dashboard .stats-grid,
+.dashboard .quick-actions,
+.dashboard #content-main {
+    grid-column: 1;
+    min-width: 0;
+}
 
 .dashboard #content-main {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
-    max-width: 1280px;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
 }
 
 .dashboard .module { margin-bottom: 0 !important; }
 
 #content-related {
     background: transparent !important;
+    grid-column: 2;
+    grid-row: 1 / span 5;
+    width: auto !important;
+    min-width: 0;
+    margin: 0 !important;
 }
 
 #content-related .module {
     background: var(--surface) !important;
     border-radius: var(--radius) !important;
     border: 1px solid var(--border) !important;
+    width: 100%;
+    overflow: hidden;
 }
 
 #content-related h2 {
@@ -310,6 +338,39 @@ div.breadcrumbs a:hover { color: var(--primary) !important; }
     font-weight: 700 !important;
     text-transform: uppercase;
     letter-spacing: .03em;
+}
+
+#recent-actions-module h3 {
+    margin: 0;
+    padding: 12px 16px 6px;
+    color: var(--text-secondary);
+    font-size: .78rem;
+    font-weight: 700;
+}
+
+#recent-actions-module .actionlist {
+    display: grid;
+    gap: 8px;
+    max-height: 520px;
+    margin: 0;
+    padding: 0 12px 14px;
+    overflow-y: auto;
+}
+
+#recent-actions-module .actionlist li {
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid #e9edf5;
+    border-radius: var(--radius-sm);
+    background: #f8fafc;
+    color: var(--text-secondary);
+    font-size: .78rem;
+    line-height: 1.45;
+}
+
+#recent-actions-module .actionlist a {
+    color: var(--primary) !important;
+    font-weight: 700;
 }
 
 /* ====== Stats Cards (custom dashboard) ====== */
@@ -476,6 +537,11 @@ table { border-collapse: collapse !important; }
     box-shadow: var(--shadow) !important;
 }
 
+.results {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
 #result_list table { border: none !important; }
 
 #result_list table thead th {
@@ -601,16 +667,46 @@ table { border-collapse: collapse !important; }
     padding: 0 0 20px !important;
 }
 
+#changelist-search > div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 100%;
+}
+
+#changelist-search label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 36px;
+    margin: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    flex: 0 0 auto;
+}
+
+#changelist-search label img {
+    width: 15px;
+    height: 15px;
+    opacity: .55;
+}
+
 #searchbar {
     border: 1.5px solid var(--border) !important;
     border-radius: var(--radius) !important;
-    padding: 10px 16px !important;
+    height: 36px;
+    min-height: 36px;
+    padding: 0 14px !important;
     font-size: .88rem !important;
     font-family: var(--font) !important;
     background: var(--surface) !important;
     transition: all var(--transition);
-    width: 360px;
+    width: min(420px, 100%);
+    line-height: 34px;
     color: var(--text);
+    flex: 1 1 320px;
 }
 
 #searchbar:focus {
@@ -626,12 +722,16 @@ table { border-collapse: collapse !important; }
     color: #fff !important;
     border: none !important;
     border-radius: var(--radius) !important;
-    padding: 10px 24px !important;
+    height: 36px;
+    min-height: 36px;
+    padding: 0 24px !important;
     font-weight: 600 !important;
     font-size: .85rem !important;
     font-family: var(--font) !important;
+    line-height: 36px;
     cursor: pointer;
     transition: all var(--transition);
+    flex: 0 0 auto;
 }
 
 #changelist #toolbar input[type="submit"]:hover {
@@ -788,6 +888,22 @@ select {
     background-repeat: no-repeat !important;
     background-position: right 12px center !important;
     padding-right: 36px !important;
+}
+
+select:not([multiple]) {
+    height: 36px !important;
+    min-height: 36px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    line-height: 34px !important;
+    background-size: 14px 14px !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
+    vertical-align: middle;
+}
+
+select:not([multiple]):hover {
+    border-color: #cbd5e1 !important;
+    background-color: #fbfdff !important;
 }
 
 /* ====== Date Hierarchy ====== */
@@ -959,15 +1075,26 @@ table td .addlink:hover, table td .changelink:hover, table td .viewlink:hover {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .actions select { min-width: 220px; }
 
-.actions label { font-size: .84rem; color: var(--text-secondary); font-weight: 500; }
+.actions label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: .84rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
 
 .actions .button {
-    padding: 8px 20px !important;
+    height: 34px;
+    padding: 0 20px !important;
     font-size: .82rem !important;
+    line-height: 34px;
 }
 
 /* ====== Calendar & Date Widgets ====== */
@@ -1322,6 +1449,15 @@ fieldset.collapse h2 .collapse-toggle {
 /* ====== Responsive ====== */
 @media (max-width: 1024px) {
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .dashboard #content {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard #content-related {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
     .dashboard #content-main { grid-template-columns: 1fr; }
 }
 
@@ -1421,6 +1557,19 @@ fieldset.collapse h2 .collapse-toggle {
 
     #content { padding: 16px !important; }
     #searchbar { width: 100% !important; }
+    #changelist-search > div {
+        align-items: stretch;
+        flex-wrap: wrap;
+    }
+
+    #changelist-search label {
+        display: none;
+    }
+
+    #changelist #toolbar input[type="submit"] {
+        flex: 0 0 auto;
+    }
+
     .stats-grid { grid-template-columns: 1fr; }
     .submit-row { flex-wrap: wrap; gap: 8px; }
     .quick-actions { flex-direction: column; }
