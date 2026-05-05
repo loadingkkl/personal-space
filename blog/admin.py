@@ -12,7 +12,26 @@ blog_admin_site.register(User, UserAdmin)
 blog_admin_site.register(Group, GroupAdmin)
 
 
-class PostAdminForm(forms.ModelForm):
+MAX_ADMIN_IMAGE_UPLOAD_BYTES = 3 * 1024 * 1024
+
+
+class AdminImageUploadFormMixin:
+    image_fields = ()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        for field_name in self.image_fields:
+            upload = cleaned_data.get(field_name)
+            if upload and getattr(upload, 'size', 0) > MAX_ADMIN_IMAGE_UPLOAD_BYTES:
+                self.add_error(
+                    field_name,
+                    '图片超过 3MB。请换一张较小的图片，或等待浏览器自动压缩后再提交。',
+                )
+        return cleaned_data
+
+
+class PostAdminForm(AdminImageUploadFormMixin, forms.ModelForm):
+    image_fields = ('cover',)
     body = forms.CharField(
         label='正文',
         help_text='支持完整 Markdown：标题、列表、引用、链接、图片、表格、代码块。二级/三级标题会生成文章目录。',
@@ -26,6 +45,20 @@ class PostAdminForm(forms.ModelForm):
 
     class Meta:
         model = Post
+        fields = '__all__'
+
+    def clean_body(self):
+        body = self.cleaned_data.get('body', '')
+        if 'data:image/' in body:
+            raise forms.ValidationError('正文里不能直接粘贴 base64 图片，请先上传到 Cloudinary 后使用图片 URL。')
+        return body
+
+
+class MediaAdminForm(AdminImageUploadFormMixin, forms.ModelForm):
+    image_fields = ('cover',)
+
+    class Meta:
+        model = Media
         fields = '__all__'
 
 
@@ -133,11 +166,12 @@ class PostAdmin(OperationLogMixin, admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
     class Media:
-        js = ('js/admin_markdown_preview.js',)
+        js = ('js/admin_markdown_preview.js', 'js/admin_image_compress.js')
 
 
 @admin.register(Media, site=blog_admin_site)
 class MediaAdmin(OperationLogMixin, admin.ModelAdmin):
+    form = MediaAdminForm
     list_display = ('cover_preview', 'title', 'type_display', 'rating_display', 'status_display', 'creator', 'finished_date')
     list_filter = ('media_type', 'status', 'rating')
     search_fields = ('title', 'creator', 'summary')
@@ -162,6 +196,9 @@ class MediaAdmin(OperationLogMixin, admin.ModelAdmin):
             )
         return format_html('<span class="admin-preview">暂无封面</span>')
     cover_preview.short_description = '封面'
+
+    class Media:
+        js = ('js/admin_image_compress.js',)
 
     def type_display(self, obj):
         colors = {'movie': 'violet', 'book': 'emerald', 'game': 'sky'}
