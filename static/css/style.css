@@ -952,6 +952,20 @@ img { max-width: 100%; height: auto; display: block; }
     box-shadow: 0 4px 12px rgba(35,183,229,.3);
 }
 
+.btn-outline {
+    color: var(--primary);
+    background: #fff;
+    border: 1px solid rgba(35,183,229,.45);
+}
+
+.btn-outline:hover {
+    color: #fff;
+    background: var(--primary);
+    border-color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(35,183,229,.22);
+}
+
 /* ====== Profile Card ====== */
 .profile-card {
     text-align: center;
@@ -1286,6 +1300,12 @@ img { max-width: 100%; height: auto; display: block; }
 .feed-panel p {
     color: var(--text-secondary);
     line-height: 1.7;
+}
+
+.feed-panel .btn {
+    width: 100%;
+    min-height: 44px;
+    font-weight: 700;
 }
 
 .feed-panel code {
