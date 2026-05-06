@@ -11,7 +11,7 @@
             <img src="{{ post.cover.url }}" alt="{{ post.title }}" class="carousel-img">
             <div class="carousel-overlay"></div>
             <div class="carousel-content">
-                <a href="{% url 'blog:category' post.category.pk %}" class="carousel-category">{{ post.category }}</a>
+                <a href="{% url 'blog:category' post.category_name %}" class="carousel-category">{{ post.category_name }}</a>
                 <h2 class="carousel-title">
                     <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
                 </h2>
@@ -54,7 +54,7 @@
         {% endif %}
         <div class="post-card-body">
             <div class="post-meta">
-                <a href="{% url 'blog:category' post.category.pk %}" class="post-category">{{ post.category }}</a>
+                <a href="{% url 'blog:category' post.category_name %}" class="post-category">{{ post.category_name }}</a>
                 <span class="post-date">{{ post.publish_time|date:"Y年m月d日" }}</span>
             </div>
             <h2 class="post-card-title">

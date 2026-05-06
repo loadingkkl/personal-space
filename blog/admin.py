@@ -6,7 +6,7 @@ from django.utils import timezone
 from django.utils.html import format_html
 
 from .admin_site import blog_admin_site
-from .models import Category, Comment, FriendLink, Media, OperationLog, Post, Tag
+from .models import Comment, FriendLink, Media, OperationLog, Post
 
 blog_admin_site.register(User, UserAdmin)
 blog_admin_site.register(Group, GroupAdmin)
@@ -91,40 +91,19 @@ class OperationLogMixin:
         super().delete_queryset(request, queryset)
 
 
-@admin.register(Category, site=blog_admin_site)
-class CategoryAdmin(OperationLogMixin, admin.ModelAdmin):
-    list_display = ('name', 'post_count')
-    search_fields = ('name',)
-
-    def post_count(self, obj):
-        return format_html('<span class="admin-count">{}</span>', obj.post_set.count())
-    post_count.short_description = '文章数'
-
-
-@admin.register(Tag, site=blog_admin_site)
-class TagAdmin(OperationLogMixin, admin.ModelAdmin):
-    list_display = ('name', 'post_count')
-    search_fields = ('name',)
-
-    def post_count(self, obj):
-        return format_html('<span class="admin-count">{}</span>', obj.post_set.count())
-    post_count.short_description = '文章数'
-
-
 @admin.register(Post, site=blog_admin_site)
 class PostAdmin(OperationLogMixin, admin.ModelAdmin):
     form = PostAdminForm
     list_display = ('title', 'publish_state', 'category_display', 'author', 'publish_time', 'views_display', 'is_pinned', 'is_featured')
-    list_filter = ('category', 'author', 'publish_time', 'is_published', 'is_pinned', 'is_featured')
-    search_fields = ('title', 'body', 'excerpt')
+    list_filter = ('category_name', 'author', 'publish_time', 'is_published', 'is_pinned', 'is_featured')
+    search_fields = ('title', 'body', 'excerpt', 'category_name', 'tag_names')
     list_editable = ('is_pinned', 'is_featured')
     date_hierarchy = 'publish_time'
-    filter_horizontal = ('tags',)
     list_per_page = 20
     list_display_links = ('title',)
     fieldsets = (
         ('基本信息', {
-            'fields': ('title', 'category', 'tags', 'cover'),
+            'fields': ('title', 'category_name', 'tag_names', 'cover'),
         }),
         ('文章内容', {
             'fields': ('excerpt', 'body'),
@@ -137,10 +116,10 @@ class PostAdmin(OperationLogMixin, admin.ModelAdmin):
     def category_display(self, obj):
         return format_html(
             '<span class="admin-badge admin-badge--indigo">{}</span>',
-            obj.category.name,
+            obj.category_name,
         )
     category_display.short_description = '分类'
-    category_display.admin_order_field = 'category'
+    category_display.admin_order_field = 'category_name'
 
     def views_display(self, obj):
         return format_html('<span class="admin-count">{}</span>', obj.views)

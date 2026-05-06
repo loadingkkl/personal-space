@@ -48,9 +48,9 @@ class BlogAdminSite(AdminSite):
         return TemplateResponse(request, 'admin/health.html', context)
 
     def backup_view(self, request):
-        from .models import Category, Comment, FriendLink, Media, OperationLog, Post, Tag
+        from .models import Comment, FriendLink, Media, OperationLog, Post
 
-        models = [Category, Tag, Post, Comment, Media, FriendLink]
+        models = [Post, Comment, Media, FriendLink]
         if request.GET.get('download') == '1':
             objects = []
             for model in models:
@@ -91,7 +91,7 @@ class BlogAdminSite(AdminSite):
         return TemplateResponse(request, 'admin/backup.html', context)
 
     def index(self, request, extra_context=None):
-        from .models import Post, Comment, Media, Category, Tag, FriendLink
+        from .models import Comment, FriendLink, Media, Post, get_category_items, get_tag_items
 
         extra_context = extra_context or {}
         live_posts = Post.objects.filter(is_published=True, publish_time__lte=timezone.now())
@@ -103,8 +103,8 @@ class BlogAdminSite(AdminSite):
             'media_count': Media.objects.count(),
             'media_done_count': Media.objects.filter(status='done').count(),
             'total_views': Post.objects.aggregate(s=Sum('views'))['s'] or 0,
-            'category_count': Category.objects.count(),
-            'tag_count': Tag.objects.count(),
+            'category_count': len(get_category_items(live_posts)),
+            'tag_count': len(get_tag_items(live_posts)),
             'link_count': FriendLink.objects.count(),
         }
         extra_context['today'] = timezone.localdate().strftime('%Y年%m月%d日')

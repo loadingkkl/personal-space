@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.utils import timezone
 from datetime import timedelta
 
-from .models import Category, Comment, Post
+from .models import Comment, Post
 from .views import render_article_body
 
 
@@ -13,12 +13,12 @@ class CommentModerationTests(TestCase):
     def setUp(self):
         cache.clear()
         self.author = User.objects.create_user(username='author', password='pass')
-        self.category = Category.objects.create(name='Django')
         self.post = Post.objects.create(
             title='Moderation test',
             body='Body',
             excerpt='Excerpt',
-            category=self.category,
+            category_name='Django',
+            tag_names='test',
             author=self.author,
         )
 
@@ -59,7 +59,7 @@ class CommentModerationTests(TestCase):
             title='Future post',
             body='Hidden for now',
             excerpt='Hidden',
-            category=self.category,
+            category_name='Django',
             author=self.author,
             is_published=True,
             publish_time=timezone.now() + timedelta(days=1),

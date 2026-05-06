@@ -1,29 +1,76 @@
 ﻿from django.db import models
+from collections import Counter
+from dataclasses import dataclass
+
+from django.db.models import Q
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.utils import timezone
 
 
-class Category(models.Model):
-    name = models.CharField('分类名称', max_length=100)
+@dataclass(frozen=True)
+class TaxonomyItem:
+    name: str
+    num_posts: int = 0
 
-    class Meta:
-        verbose_name = '分类'
-        verbose_name_plural = verbose_name
+    @property
+    def pk(self):
+        return self.name
 
     def __str__(self):
         return self.name
 
 
-class Tag(models.Model):
-    name = models.CharField('标签名称', max_length=100)
+def normalize_taxonomy_name(value, fallback='未分类'):
+    value = (value or '').strip()
+    return value or fallback
 
-    class Meta:
-        verbose_name = '标签'
-        verbose_name_plural = verbose_name
 
-    def __str__(self):
-        return self.name
+def parse_tag_names(value):
+    names = []
+    seen = set()
+    for raw_name in (value or '').replace('，', ',').split(','):
+        name = raw_name.strip()
+        if name and name not in seen:
+            names.append(name)
+            seen.add(name)
+    return names
+
+
+def join_tag_names(names):
+    return ', '.join(parse_tag_names(','.join(names)))
+
+
+def tag_filter_q(name):
+    name = normalize_taxonomy_name(name, fallback='')
+    if not name:
+        return Q(pk__isnull=True)
+    return (
+        Q(tag_names__iexact=name)
+        | Q(tag_names__istartswith=f'{name},')
+        | Q(tag_names__iendswith=f', {name}')
+        | Q(tag_names__iendswith=f',{name}')
+        | Q(tag_names__icontains=f', {name},')
+        | Q(tag_names__icontains=f',{name},')
+        | Q(tag_names__icontains=f',{name}, ')
+    )
+
+
+def get_category_items(queryset):
+    rows = (
+        queryset.exclude(category_name='')
+        .values('category_name')
+        .annotate(num_posts=models.Count('pk'))
+        .order_by('category_name')
+    )
+    return [TaxonomyItem(row['category_name'], row['num_posts']) for row in rows]
+
+
+def get_tag_items(queryset):
+    counter = Counter()
+    for tag_names in queryset.values_list('tag_names', flat=True):
+        counter.update(parse_tag_names(tag_names))
+    return [TaxonomyItem(name, count) for name, count in sorted(counter.items())]
 
 
 class Post(models.Model):
@@ -34,8 +81,8 @@ class Post(models.Model):
     created_time = models.DateTimeField('创建时间', default=timezone.now)
     modified_time = models.DateTimeField('修改时间', auto_now=True)
     publish_time = models.DateTimeField('发布时间', default=timezone.now)
-    category = models.ForeignKey(Category, verbose_name='分类', on_delete=models.CASCADE)
-    tags = models.ManyToManyField(Tag, verbose_name='标签', blank=True)
+    category_name = models.CharField('分类', max_length=100, db_index=True, default='未分类')
+    tag_names = models.CharField('标签', max_length=255, blank=True, help_text='多个标签请用逗号分隔')
     author = models.ForeignKey(User, verbose_name='作者', on_delete=models.CASCADE)
     views = models.PositiveIntegerField('阅读量', default=0)
     is_published = models.BooleanField('已发布', default=True)
@@ -53,6 +100,11 @@ class Post(models.Model):
     def get_absolute_url(self):
         return reverse('blog:detail_by_pk', kwargs={'pk': self.pk})
 
+    def save(self, *args, **kwargs):
+        self.category_name = normalize_taxonomy_name(self.category_name)
+        self.tag_names = join_tag_names(parse_tag_names(self.tag_names))
+        super().save(*args, **kwargs)
+
     def increase_views(self):
         self.views += 1
         self.save(update_fields=['views'])
@@ -60,6 +112,14 @@ class Post(models.Model):
     @property
     def is_live(self):
         return self.is_published and self.publish_time <= timezone.now()
+
+    @property
+    def category(self):
+        return TaxonomyItem(self.category_name)
+
+    @property
+    def tag_list(self):
+        return [TaxonomyItem(name) for name in parse_tag_names(self.tag_names)]
 
 
 class Media(models.Model):

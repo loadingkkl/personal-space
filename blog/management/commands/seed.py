@@ -10,7 +10,7 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from PIL import Image, ImageDraw, ImageFont
 
-from blog.models import Category, Tag, Post
+from blog.models import Post
 
 
 COVER_PALETTES = [
@@ -108,25 +108,6 @@ class Command(BaseCommand):
             user.save()
 
         Post.objects.all().delete()
-        Category.objects.all().delete()
-        Tag.objects.all().delete()
-
-        categories_data = ['Python', '前端开发', '数据库', '生活随笔', 'DevOps', '人工智能', '移动开发', '架构设计']
-        categories = {}
-        for name in categories_data:
-            cat, _ = Category.objects.get_or_create(name=name)
-            categories[name] = cat
-
-        tags_data = [
-            'Django', 'Flask', 'FastAPI', 'JavaScript', 'TypeScript', 'Vue', 'React',
-            'Docker', 'Kubernetes', 'Linux', 'Git', 'CSS', 'PostgreSQL', 'Redis',
-            'MySQL', 'MongoDB', 'GraphQL', 'REST API', 'CI/CD', 'Nginx',
-        ]
-        tags = {}
-        for name in tags_data:
-            tag, _ = Tag.objects.get_or_create(name=name)
-            tags[name] = tag
-
         posts_data = [
             {
                 'title': 'Django 入门：从零搭建个人博客',
@@ -256,14 +237,12 @@ class Command(BaseCommand):
                 title=data['title'],
                 body=data['body'],
                 excerpt=data['excerpt'],
-                category=categories[data['category']],
+                category_name=data['category'],
+                tag_names=', '.join(data['tags']),
                 author=user,
                 views=random.randint(50, 2000),
                 is_featured=data.get('featured', False),
             )
-            for tag_name in data['tags']:
-                post.tags.add(tags[tag_name])
-
             img_data = None
             pid = PICSUM_IDS[i % len(PICSUM_IDS)]
             url = f'https://picsum.photos/id/{pid}/960/480'

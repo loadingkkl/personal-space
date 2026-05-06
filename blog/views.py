@@ -6,7 +6,16 @@ from django.db.models import Q, Count
 from django.utils import timezone
 from django.utils.html import escape
 import markdown
-from .models import Post, Category, Tag, Comment, Media, FriendLink
+from .models import (
+    Comment,
+    FriendLink,
+    Media,
+    Post,
+    get_category_items,
+    get_tag_items,
+    normalize_taxonomy_name,
+    tag_filter_q,
+)
 from .forms import CommentForm
 
 
@@ -82,14 +91,14 @@ class IndexView(ListView):
     paginate_by = 6
 
     def get_queryset(self):
-        return live_posts().select_related('category', 'author').order_by('-is_pinned', '-publish_time')
+        return live_posts().select_related('author').order_by('-is_pinned', '-publish_time')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['featured_posts'] = (
             live_posts().filter(is_featured=True, cover__isnull=False)
             .exclude(cover='')
-            .select_related('category', 'author')
+            .select_related('author')
             .order_by('-is_pinned', '-publish_time')[:5]
         )
         return context
@@ -137,12 +146,12 @@ class CategoryView(ListView):
     paginate_by = 6
 
     def get_queryset(self):
-        self.category = get_object_or_404(Category, pk=self.kwargs.get('pk'))
-        return live_posts().filter(category=self.category).order_by('-is_pinned', '-publish_time')
+        self.category_name = normalize_taxonomy_name(self.kwargs.get('name'))
+        return live_posts().filter(category_name__iexact=self.category_name).order_by('-is_pinned', '-publish_time')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['page_title'] = f'分类: {self.category.name}'
+        context['page_title'] = f'分类: {self.category_name}'
         return context
 
 
@@ -153,12 +162,12 @@ class TagView(ListView):
     paginate_by = 6
 
     def get_queryset(self):
-        self.tag = get_object_or_404(Tag, pk=self.kwargs.get('pk'))
-        return live_posts().filter(tags=self.tag).order_by('-is_pinned', '-publish_time')
+        self.tag_name = normalize_taxonomy_name(self.kwargs.get('name'), fallback='')
+        return live_posts().filter(tag_filter_q(self.tag_name)).order_by('-is_pinned', '-publish_time')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['page_title'] = f'标签: {self.tag.name}'
+        context['page_title'] = f'标签: {self.tag_name}'
         return context
 
 
@@ -217,18 +226,17 @@ class ArticleListView(ListView):
         qs = (
             live_posts()
             .annotate(comment_count=Count('comments', filter=Q(comments__status=Comment.STATUS_APPROVED)))
-            .select_related('category', 'author')
-            .prefetch_related('tags')
+            .select_related('author')
         )
 
-        self.current_category = self.request.GET.get('cat', '')
-        self.current_tag = self.request.GET.get('tag', '')
+        self.current_category = self.request.GET.get('cat', '').strip()
+        self.current_tag = self.request.GET.get('tag', '').strip()
         self.current_sort = self.request.GET.get('sort', 'latest')
 
         if self.current_category:
-            qs = qs.filter(category__pk=self.current_category)
+            qs = qs.filter(category_name__iexact=self.current_category)
         if self.current_tag:
-            qs = qs.filter(tags__pk=self.current_tag)
+            qs = qs.filter(tag_filter_q(self.current_tag))
 
         if self.current_sort == 'latest':
             return qs.order_by('-is_pinned', '-publish_time')
@@ -237,9 +245,8 @@ class ArticleListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        live_filter = Q(post__is_published=True, post__publish_time__lte=timezone.now())
-        context['all_categories'] = Category.objects.annotate(num_posts=Count('post', filter=live_filter)).filter(num_posts__gt=0)
-        context['all_tags'] = Tag.objects.annotate(num_posts=Count('post', filter=live_filter)).filter(num_posts__gt=0)
+        context['all_categories'] = get_category_items(live_posts())
+        context['all_tags'] = get_tag_items(live_posts())
         context['sort_options'] = SORT_OPTIONS
         context['current_category'] = self.current_category
         context['current_tag'] = self.current_tag
