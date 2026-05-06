@@ -14,6 +14,7 @@ urlpatterns = [
     path('media/', views.MediaListView.as_view(), name='media'),
     path('links/', views.links_view, name='links'),
     path('about/', views.about_view, name='about'),
+    path('feeds/', views.feeds_view, name='feeds'),
     path('search/', views.SearchView.as_view(), name='search'),
     path('post/id/<int:pk>/comment/', views.comment_view, name='comment_by_pk'),
     path('post/<int:pk>/comment/', views.comment_view, name='comment_legacy'),

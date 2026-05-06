@@ -3,6 +3,7 @@ from django.views.generic import ListView, DetailView
 from django.contrib import messages
 from django.core.cache import cache
 from django.db.models import Q, Count
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import escape
 import markdown
@@ -295,6 +296,16 @@ def links_view(request):
 
 def about_view(request):
     return render(request, 'blog/about.html')
+
+
+def feeds_view(request):
+    context = {
+        'rss_url': request.build_absolute_uri(reverse('rss')),
+        'sitemap_url': request.build_absolute_uri(reverse('sitemap')),
+        'robots_url': request.build_absolute_uri(reverse('robots')),
+        'latest_posts': live_posts().order_by('-publish_time')[:10],
+    }
+    return render(request, 'blog/feeds.html', context)
 
 
 def comment_view(request, pk):

@@ -92,6 +92,61 @@ class CommentModerationTests(TestCase):
         self.assertRedirects(response, self.post.get_absolute_url())
         self.assertEqual(Comment.objects.count(), 0)
 
+
+class FeedAndSitemapTests(TestCase):
+    def setUp(self):
+        self.author = User.objects.create_user(username='feed-author', password='pass')
+        self.admin_user = User.objects.create_superuser(
+            username='admin-user',
+            email='admin@example.com',
+            password='pass',
+        )
+        self.post = Post.objects.create(
+            title='RSS and sitemap post',
+            body='Body for feed output',
+            excerpt='Feed excerpt',
+            category_name='Django',
+            tag_names='RSS, Sitemap',
+            author=self.author,
+        )
+
+    def test_rss_feed_is_public(self):
+        response = self.client.get('/rss.xml')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'RSS and sitemap post')
+        self.assertIn('xml', response['Content-Type'])
+
+    def test_sitemap_is_public(self):
+        response = self.client.get('/sitemap.xml')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, self.post.get_absolute_url())
+        self.assertIn('xml', response['Content-Type'])
+
+    def test_robots_declares_sitemap(self):
+        response = self.client.get('/robots.txt')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'User-agent: *')
+        self.assertContains(response, 'Sitemap:')
+
+    def test_public_feeds_page_links_outputs(self):
+        response = self.client.get('/feeds/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '/rss.xml')
+        self.assertContains(response, '/sitemap.xml')
+        self.assertContains(response, 'RSS and sitemap post')
+
+    def test_admin_seo_page_is_available_to_staff(self):
+        self.client.force_login(self.admin_user)
+        response = self.client.get('/admin/seo/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '/rss.xml')
+        self.assertContains(response, '/sitemap.xml')
+
     def test_rate_limit_blocks_repeated_submissions(self):
         url = reverse('blog:comment_by_pk', args=[self.post.pk])
         payload = {

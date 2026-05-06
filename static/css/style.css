@@ -1233,6 +1233,105 @@ img { max-width: 100%; height: auto; display: block; }
     margin-top: auto;
 }
 
+.footer a {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.feeds-page {
+    max-width: 1080px;
+    margin: 0 auto;
+}
+
+.feeds-page .page-header p {
+    margin-top: 10px;
+    color: var(--text-secondary);
+}
+
+.feed-panel-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 28px;
+}
+
+.feed-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 22px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+}
+
+.feed-panel__eyebrow {
+    display: inline-flex;
+    width: fit-content;
+    margin-bottom: 8px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(37, 99, 235, .08);
+    color: var(--primary);
+    font-size: .72rem;
+    font-weight: 800;
+}
+
+.feed-panel h2 {
+    margin-bottom: 8px;
+    font-size: 1.15rem;
+}
+
+.feed-panel p {
+    color: var(--text-secondary);
+    line-height: 1.7;
+}
+
+.feed-panel code {
+    display: block;
+    padding: 10px 12px;
+    overflow-wrap: anywhere;
+    background: var(--bg-subtle);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-size: .8rem;
+}
+
+.feed-latest {
+    padding: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.feed-latest h2 {
+    margin-bottom: 14px;
+    font-size: 1.2rem;
+}
+
+.feed-latest-list {
+    list-style: none;
+}
+
+.feed-latest-list li {
+    display: flex;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--border);
+}
+
+.feed-latest-list li:last-child {
+    border-bottom: 0;
+}
+
+.feed-latest-list time {
+    color: var(--text-secondary);
+    font-size: .86rem;
+    white-space: nowrap;
+}
+
 /* ====== Responsive ====== */
 @media (max-width: 900px) {
     .layout {
@@ -1261,6 +1360,16 @@ img { max-width: 100%; height: auto; display: block; }
 }
 
 @media (max-width: 768px) {
+    .feed-panel-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .feed-latest-list li {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 4px;
+    }
+
     .nav-links {
         display: none;
         flex-direction: column;

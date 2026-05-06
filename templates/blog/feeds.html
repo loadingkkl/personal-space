@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}订阅与站点地图 - 我的博客{% endblock %}
+{% block layout_class %}layout-full{% endblock %}
+
+{% block content %}
+<div class="feeds-page">
+    <div class="page-header">
+        <h1>订阅与站点地图</h1>
+        <p>通过 RSS 订阅最新文章，并使用 Sitemap 帮助搜索引擎发现站点内容。</p>
+    </div>
+
+    <div class="feed-panel-grid">
+        <section class="feed-panel">
+            <div class="feed-panel__meta">
+                <span class="feed-panel__eyebrow">RSS</span>
+                <h2>最新文章订阅</h2>
+                <p>RSS 会输出最近发布的文章标题、摘要、链接和更新时间，适合阅读器或聚合工具订阅。</p>
+            </div>
+            <a href="{% url 'rss' %}" class="btn btn-primary" target="_blank" rel="noopener">打开 RSS</a>
+            <code>{{ rss_url }}</code>
+        </section>
+
+        <section class="feed-panel">
+            <div class="feed-panel__meta">
+                <span class="feed-panel__eyebrow">Sitemap</span>
+                <h2>站点地图</h2>
+                <p>Sitemap 会列出已发布文章的链接和最后更新时间，用于提升搜索引擎抓取效率。</p>
+            </div>
+            <a href="{% url 'sitemap' %}" class="btn btn-outline" target="_blank" rel="noopener">打开 Sitemap</a>
+            <code>{{ sitemap_url }}</code>
+        </section>
+
+        <section class="feed-panel">
+            <div class="feed-panel__meta">
+                <span class="feed-panel__eyebrow">Robots</span>
+                <h2>抓取规则</h2>
+                <p>robots.txt 会声明 Sitemap 地址，便于搜索引擎自动识别站点地图。</p>
+            </div>
+            <a href="{% url 'robots' %}" class="btn btn-outline" target="_blank" rel="noopener">打开 Robots</a>
+            <code>{{ robots_url }}</code>
+        </section>
+    </div>
+
+    <section class="feed-latest">
+        <h2>RSS 当前包含的最新文章</h2>
+        <ul class="feed-latest-list">
+            {% for post in latest_posts %}
+            <li>
+                <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+                <time>{{ post.publish_time|date:"Y-m-d" }}</time>
+            </li>
+            {% empty %}
+            <li class="empty-hint">暂无已发布文章</li>
+            {% endfor %}
+        </ul>
+    </section>
+</div>
+{% endblock %}
+
+{% block sidebar %}{% endblock %}

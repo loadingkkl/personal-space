@@ -34,6 +34,7 @@ class BlogAdminSite(AdminSite):
         custom_urls = [
             path('health/', self.admin_view(self.health_view), name='health'),
             path('backup/', self.admin_view(self.backup_view), name='backup'),
+            path('seo/', self.admin_view(self.seo_view), name='seo'),
         ]
         return custom_urls + urls
 
@@ -46,6 +47,25 @@ class BlogAdminSite(AdminSite):
             'health': get_deployment_health(),
         }
         return TemplateResponse(request, 'admin/health.html', context)
+
+    def seo_view(self, request):
+        from django.urls import reverse
+
+        from .models import Post
+
+        live_posts = Post.objects.filter(is_published=True, publish_time__lte=timezone.now())
+        latest_post = live_posts.order_by('-modified_time').first()
+        context = {
+            **self.each_context(request),
+            'title': 'RSS 与 Sitemap',
+            'rss_url': request.build_absolute_uri(reverse('rss')),
+            'sitemap_url': request.build_absolute_uri(reverse('sitemap')),
+            'robots_url': request.build_absolute_uri(reverse('robots')),
+            'feed_page_url': request.build_absolute_uri(reverse('blog:feeds')),
+            'published_count': live_posts.count(),
+            'latest_post': latest_post,
+        }
+        return TemplateResponse(request, 'admin/seo.html', context)
 
     def backup_view(self, request):
         from .models import Comment, FriendLink, Media, OperationLog, Post

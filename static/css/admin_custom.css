@@ -1680,6 +1680,18 @@ fieldset.collapse h2 .collapse-toggle {
     font-size: .95rem;
 }
 
+.seo-stats-grid {
+    margin-bottom: 20px;
+}
+
+.seo-url-module table th {
+    width: 140px;
+}
+
+.seo-url-module table td {
+    overflow-wrap: anywhere;
+}
+
 /* ====== Markdown Editor Preview ====== */
 .markdown-editor-shell {
     display: grid;
