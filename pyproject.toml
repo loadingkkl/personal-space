@@ -14,5 +14,8 @@ dependencies = [
     "Pygments>=2.20",
 ]
 
+[project.scripts]
+app = "blogproject.wsgi:application"
+
 [tool.vercel.scripts]
 build = "python build.py"
