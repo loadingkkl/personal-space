@@ -1280,6 +1280,10 @@ img { max-width: 100%; height: auto; display: block; }
     box-shadow: var(--shadow-sm);
 }
 
+.feed-panel__meta {
+    flex: 1;
+}
+
 .feed-panel__eyebrow {
     display: inline-flex;
     width: fit-content;
